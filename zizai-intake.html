@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Client Intake</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #222222;
+    --accent: #c8f060;
+    --accent2: #60c8f0;
+    --text: #e8e8e0;
+    --muted: #666660;
+    --danger: #f06060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Grid noise texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(200,240,96,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,240,96,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 120px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 56px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: -1px;
+    color: var(--accent);
+  }
+
+  .logo span {
+    color: var(--text);
+  }
+
+  .header-meta {
+    text-align: right;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.8;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    height: 2px;
+    background: var(--border);
+    margin-bottom: 48px;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    position: absolute;
+    right: 0;
+    top: 8px;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 40px;
+    display: none;
+  }
+
+  .section.active { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .section-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(200,240,96,0.08);
+    border: 1px solid rgba(200,240,96,0.2);
+    padding: 3px 8px;
+    letter-spacing: 2px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--text);
+  }
+
+  /* Field */
+  .field {
+    margin-bottom: 24px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .field label .req {
+    color: var(--accent);
+    margin-left: 4px;
+  }
+
+  .field .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="url"],
+  select,
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    resize: vertical;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(200,240,96,0.08);
+  }
+
+  textarea { min-height: 90px; }
+  textarea.tall { min-height: 130px; }
+
+  select option { background: #111; }
+
+  /* Radio pills */
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pill input { display: none; }
+
+  .pill label {
+    display: inline-block;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    text-transform: none;
+  }
+
+  .pill input:checked + label {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200,240,96,0.06);
+  }
+
+  .pill label:hover {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  /* Row */
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Nav */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0a;
+  }
+
+  .btn-primary:hover {
+    background: #d8ff70;
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  .btn-generate {
+    background: var(--accent2);
+    color: #0a0a0a;
+    font-size: 14px;
+    padding: 14px 36px;
+  }
+
+  .btn-generate:hover {
+    background: #80d8ff;
+    transform: translateY(-1px);
+  }
+
+  /* Output */
+  #output-section {
+    display: none;
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .output-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+  }
+
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+
+  .btn-copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    white-space: pre-wrap;
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text);
+    min-height: 300px;
+    position: relative;
+  }
+
+  .output-box.loading::after {
+    content: '';
+    display: block;
+  }
+
+  .streaming-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--accent);
+    animation: blink 0.8s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .generating-label {
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Saved list */
+  .saved-section {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+
+  .saved-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .saved-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .saved-item:hover {
+    border-color: var(--accent2);
+  }
+
+  .saved-item-name {
+    font-weight: 400;
+    color: var(--text);
+  }
+
+  .saved-item-meta {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .saved-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-sm {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+
+  .btn-sm:hover { color: var(--accent2); border-color: var(--accent2); }
+  .btn-sm.del:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--accent);
+    color: #0a0a0a;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 12px 20px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  @media (max-width: 600px) {
+    .row-2 { grid-template-columns: 1fr; }
+    .shell { padding: 24px 16px 80px; }
+  }
+</style>
+<style>
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  #login-screen::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,240,96,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,240,96,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .login-box {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 360px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .login-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    letter-spacing: -2px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .login-logo span { color: var(--text); }
+
+  .login-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+
+  .login-field {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  #pw-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 14px 16px;
+    outline: none;
+    text-align: center;
+    letter-spacing: 4px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  #pw-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(200,240,96,0.08);
+  }
+
+  #pw-input.error {
+    border-color: var(--danger);
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  .login-error {
+    font-size: 11px;
+    color: var(--danger);
+    margin-bottom: 16px;
+    height: 16px;
+    letter-spacing: 1px;
+  }
+
+  #login-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0a0a0a;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  #login-btn:hover {
+    background: #d8ff70;
+    transform: translateY(-1px);
+  }
+
+  .login-hint {
+    margin-top: 24px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  body.unlocked #login-screen {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Zizai<span>.</span></div>
+    <div class="login-sub">Internal access only</div>
+    <div class="login-field">
+      <input type="password" id="pw-input" placeholder="········" autocomplete="off"
+        onkeydown="if(event.key==='Enter')checkPw()">
+    </div>
+    <div class="login-error" id="pw-error"></div>
+    <button id="login-btn" onclick="checkPw()">Enter →</button>
+    <div class="login-hint">Zizai · Private</div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <header>
+    <div>
+      <div class="logo">Zizai<span>.</span></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:1px;">CLIENT INTAKE SYSTEM</div>
+    </div>
+    <div class="header-meta">
+      <div id="current-date"></div>
+      <div>v1.0 — internal use</div>
+    </div>
+  </header>
+
+  <!-- Progress -->
+  <div class="progress-track" id="progress-track" style="display:none">
+    <div class="progress-fill" id="progress-fill" style="width:20%"></div>
+    <div class="progress-label" id="progress-label">STAP 1 / 5</div>
+  </div>
+
+  <!-- ============ SECTION 1: Klant ============ -->
+  <div class="section active" id="sec-1">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">Klantinformatie</span>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>Bedrijfsnaam <span class="req">*</span></label>
+        <input type="text" id="company" placeholder="bijv. Bakkerij De Wit BV">
+      </div>
+      <div class="field">
+        <label>Contactpersoon <span class="req">*</span></label>
+        <input type="text" id="contact" placeholder="Naam + functie">
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="email" placeholder="contact@bedrijf.nl">
+      </div>
+      <div class="field">
+        <label>Website / LinkedIn</label>
+        <input type="url" id="website" placeholder="https://...">
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>Sector / branche <span class="req">*</span></label>
+        <input type="text" id="sector" placeholder="bijv. finance, HR, logistics, retail">
+      </div>
+      <div class="field">
+        <label>Bedrijfsgrootte</label>
+        <div class="pills" style="margin-top:8px">
+          <div class="pill"><input type="radio" name="size" id="s1" value="1-10"><label for="s1">1–10</label></div>
+          <div class="pill"><input type="radio" name="size" id="s2" value="10-50"><label for="s2">10–50</label></div>
+          <div class="pill"><input type="radio" name="size" id="s3" value="50-250"><label for="s3">50–250</label></div>
+          <div class="pill"><input type="radio" name="size" id="s4" value="250+"><label for="s4">250+</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Bestaande tech stack / tools</label>
+      <div class="hint">Wat gebruiken ze al? CRM, ERP, interne systemen, Excel, etc.</div>
+      <textarea id="tech" placeholder="bijv. Exact Online, Microsoft 365, eigen CRM op basis van Access..."></textarea>
+    </div>
+
+    <div class="nav">
+      <span></span>
+      <button class="btn btn-primary" onclick="next(1)">Volgende →</button>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 2: Probleem ============ -->
+  <div class="section" id="sec-2">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">Probleemstelling</span>
+    </div>
+
+    <div class="field">
+      <label>Wat is het kernprobleem? <span class="req">*</span></label>
+      <div class="hint">In hun eigen woorden — wat zeggen ze zelf dat het probleem is?</div>
+      <textarea class="tall" id="problem_own" placeholder="bijv. 'We verwerken 200 emails per dag handmatig en dat kost ons 3 FTE'"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Jouw analyse van het werkelijke probleem <span class="req">*</span></label>
+      <div class="hint">Wat zit er onder? Root cause, structureel vs symptoom?</div>
+      <textarea class="tall" id="problem_real" placeholder="bijv. Geen gestandaardiseerd intake-proces, waardoor alles via email loopt..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Welk proces / afdeling is het meest geraakt?</label>
+      <input type="text" id="affected_area" placeholder="bijv. finance team, klantenservice, HR onboarding">
+    </div>
+
+    <div class="field">
+      <label>Wat is de impact van dit probleem nu?</label>
+      <div class="hint">Tijd, geld, fouten, frustratie, gemiste kansen — zo concreet mogelijk</div>
+      <textarea id="impact" placeholder="bijv. 15 uur/week kwijt, 5-10% foutmarge, medewerkers gefrustreerd..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Wat hebben ze al geprobeerd?</label>
+      <textarea id="tried" placeholder="Eerder geprobeerde oplossingen, tools, consultants, interne projecten..."></textarea>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="prev(2)">← Terug</button>
+      <button class="btn btn-primary" onclick="next(2)">Volgende →</button>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 3: Oplossing ============ -->
+  <div class="section" id="sec-3">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">Oplossingsrichting</span>
+    </div>
+
+    <div class="field">
+      <label>Eerste gevoel over de oplossing <span class="req">*</span></label>
+      <div class="hint">Wat denk jij dat we gaan bouwen? Nog niet uitgewerkt, gewoon je eerste indruk.</div>
+      <textarea class="tall" id="solution_feel" placeholder="bijv. Een agent die emails uitleest, data extraheert en in AFAS zet via API..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Type oplossing</label>
+      <div class="pills" style="margin-top:8px">
+        <div class="pill"><input type="radio" name="soltype" id="t1" value="automation"><label for="t1">Automatisering</label></div>
+        <div class="pill"><input type="radio" name="soltype" id="t2" value="agent"><label for="t2">AI Agent</label></div>
+        <div class="pill"><input type="radio" name="soltype" id="t3" value="dashboard"><label for="t3">Dashboard / inzicht</label></div>
+        <div class="pill"><input type="radio" name="soltype" id="t4" value="integration"><label for="t4">Systeemintegratie</label></div>
+        <div class="pill"><input type="radio" name="soltype" id="t5" value="tool"><label for="t5">Custom tool / app</label></div>
+        <div class="pill"><input type="radio" name="soltype" id="t6" value="unknown"><label for="t6">Nog onduidelijk</label></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Wat moet de oplossing zeker kunnen? (must-haves)</label>
+      <textarea id="must_have" placeholder="Functionaliteiten die absoluut nodig zijn voor succes..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Wat is nadrukkelijk buiten scope?</label>
+      <textarea id="out_of_scope" placeholder="Wat bouwen we expliciet NIET in deze fase?"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Integraties / koppelingen nodig?</label>
+      <textarea id="integrations" placeholder="bijv. AFAS API, Microsoft 365, Exact, Slack, eigen database..."></textarea>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="prev(3)">← Terug</button>
+      <button class="btn btn-primary" onclick="next(3)">Volgende →</button>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 4: Context ============ -->
+  <div class="section" id="sec-4">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">Context & Randvoorwaarden</span>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>Budget indicatie</label>
+        <div class="pills" style="margin-top:8px">
+          <div class="pill"><input type="radio" name="budget" id="b1" value="<5k"><label for="b1">&lt; €5K</label></div>
+          <div class="pill"><input type="radio" name="budget" id="b2" value="5-15k"><label for="b2">€5–15K</label></div>
+          <div class="pill"><input type="radio" name="budget" id="b3" value="15-50k"><label for="b3">€15–50K</label></div>
+          <div class="pill"><input type="radio" name="budget" id="b4" value="50k+"><label for="b4">€50K+</label></div>
+          <div class="pill"><input type="radio" name="budget" id="b5" value="unknown"><label for="b5">Onbekend</label></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gewenste tijdlijn</label>
+        <div class="pills" style="margin-top:8px">
+          <div class="pill"><input type="radio" name="timeline" id="tl1" value="ASAP"><label for="tl1">ASAP</label></div>
+          <div class="pill"><input type="radio" name="timeline" id="tl2" value="1-2 maanden"><label for="tl2">1–2 mnd</label></div>
+          <div class="pill"><input type="radio" name="timeline" id="tl3" value="3-6 maanden"><label for="tl3">3–6 mnd</label></div>
+          <div class="pill"><input type="radio" name="timeline" id="tl4" value="Flexibel"><label for="tl4">Flexibel</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Wie zijn de eindgebruikers?</label>
+      <div class="hint">Technisch niveau, leeftijd, dagelijkse werkwijze — wie gaat het echt gebruiken?</div>
+      <textarea id="users" placeholder="bijv. 3 medewerkers financiële administratie, niet technisch, werken in Windows/Office omgeving..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Compliance / security randvoorwaarden</label>
+      <textarea id="compliance" placeholder="bijv. AVG-gevoelige data, ISO 27001 vereiste, on-premise hosting, geen cloud..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Beslissers & stakeholders</label>
+      <div class="hint">Wie beslist? Wie moet overtuigd worden? Wie kan blokkeren?</div>
+      <textarea id="stakeholders" placeholder="bijv. CFO beslist, IT manager moet akkoord geven, operations manager is enthousiast..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Urgentie / aanleiding</label>
+      <div class="hint">Waarom nu? Wat is de trigger voor dit gesprek?</div>
+      <textarea id="urgency" placeholder="bijv. nieuwe wetgeving, medewerker vertrekt, groei maakt huidig proces onhoudbaar..."></textarea>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="prev(4)">← Terug</button>
+      <button class="btn btn-primary" onclick="next(4)">Volgende →</button>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 5: Zizai intern ============ -->
+  <div class="section" id="sec-5">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">Zizai Intern</span>
+    </div>
+
+    <div class="field">
+      <label>Eerste inschatting complexiteit</label>
+      <div class="pills" style="margin-top:8px">
+        <div class="pill"><input type="radio" name="complexity" id="c1" value="Laag — 1-2 weken"><label for="c1">Laag (1–2 wk)</label></div>
+        <div class="pill"><input type="radio" name="complexity" id="c2" value="Middel — 1-2 maanden"><label for="c2">Middel (1–2 mnd)</label></div>
+        <div class="pill"><input type="radio" name="complexity" id="c3" value="Hoog — 3+ maanden"><label for="c3">Hoog (3+ mnd)</label></div>
+        <div class="pill"><input type="radio" name="complexity" id="c4" value="Onbekend"><label for="c4">Onbekend</label></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Strategische waarde voor Zizai</label>
+      <div class="pills" style="margin-top:8px">
+        <div class="pill"><input type="radio" name="value" id="v1" value="Portfolio showcase"><label for="v1">Portfolio showcase</label></div>
+        <div class="pill"><input type="radio" name="value" id="v2" value="Recurring revenue potentie"><label for="v2">Recurring revenue</label></div>
+        <div class="pill"><input type="radio" name="value" id="v3" value="Referentie klant"><label for="v3">Referentie klant</label></div>
+        <div class="pill"><input type="radio" name="value" id="v4" value="Leercurve / nieuw domein"><label for="v4">Leercurve</label></div>
+        <div class="pill"><input type="radio" name="value" id="v5" value="Puur commercieel"><label for="v5">Puur commercieel</label></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Wie trekt dit project? (Sheryla / Mark / beiden)</label>
+      <div class="pills" style="margin-top:8px">
+        <div class="pill"><input type="radio" name="lead" id="l1" value="Sheryla"><label for="l1">Sheryla</label></div>
+        <div class="pill"><input type="radio" name="lead" id="l2" value="Mark"><label for="l2">Mark</label></div>
+        <div class="pill"><input type="radio" name="lead" id="l3" value="Beiden gelijk"><label for="l3">Beiden</label></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Open vragen / twijfels</label>
+      <div class="hint">Wat weet je nog niet? Wat moet je nog uitzoeken of vragen aan de klant?</div>
+      <textarea class="tall" id="open_questions" placeholder="Dingen die nog onduidelijk zijn, aannames die je moet valideren..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Extra notities</label>
+      <textarea id="notes" placeholder="Alles wat je kwijt wil maar nergens past..."></textarea>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="prev(5)">← Terug</button>
+      <button class="btn btn-generate" onclick="generate()">⚡ Genereer Product Brief</button>
+    </div>
+  </div>
+
+  <!-- ============ OUTPUT ============ -->
+  <div id="output-section">
+    <div class="output-header">
+      <div class="output-title">Product Brief</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-copy" onclick="copyOutput()">KOPIEER</button>
+        <button class="btn-copy" onclick="saveProject()">OPSLAAN</button>
+        <button class="btn-copy" onclick="resetForm()">NIEUW</button>
+      </div>
+    </div>
+    <div id="generating-label" class="generating-label" style="display:none">● GENERATING</div>
+    <div class="output-box" id="output-box"></div>
+
+    <!-- Second opinion -->
+    <div id="second-opinion-trigger" style="display:none;margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--text)">🔴 Second Opinion</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Advocaat van de duivel. Wat mis je? Wat klopt niet? Wat gaat fout?</div>
+        </div>
+        <button class="btn" style="background:var(--danger);color:#fff;font-size:12px;padding:10px 22px" onclick="generateSecondOpinion()">Geef tegengas</button>
+      </div>
+      <div id="so-generating" class="generating-label" style="display:none;margin-top:16px">● ANALYSEREN</div>
+      <div id="so-box" class="output-box" style="display:none;margin-top:16px;border-color:rgba(240,96,96,0.3);background:#110a0a"></div>
+    </div>
+  </div>
+
+  <!-- ============ SAVED ============ -->
+  <div class="saved-section" id="saved-section" style="display:none">
+    <div class="saved-title">Opgeslagen projecten</div>
+    <div id="saved-list"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // Password
+  const PASSWORD = 'donebyfriday';
+
+  function checkPw() {
+    const val = document.getElementById('pw-input').value;
+    const err = document.getElementById('pw-error');
+    const inp = document.getElementById('pw-input');
+    if (val === PASSWORD) {
+      document.body.classList.add('unlocked');
+      setTimeout(() => document.getElementById('login-screen').style.display = 'none', 400);
+      sessionStorage.setItem('zizai_auth', '1');
+    } else {
+      err.textContent = 'Toegang geweigerd.';
+      inp.classList.add('error');
+      inp.value = '';
+      setTimeout(() => { inp.classList.remove('error'); err.textContent = ''; }, 1000);
+    }
+  }
+
+  // Check if already authenticated this session
+  if (sessionStorage.getItem('zizai_auth') === '1') {
+    document.getElementById('login-screen').style.display = 'none';
+  }
+
+  // Date
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('nl-NL', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  let currentSection = 1;
+  const totalSections = 5;
+  let lastOutput = '';
+
+  function showSection(n) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById('sec-' + n);
+    if (el) el.classList.add('active');
+    currentSection = n;
+
+    const pt = document.getElementById('progress-track');
+    const pf = document.getElementById('progress-fill');
+    const pl = document.getElementById('progress-label');
+    if (n <= totalSections) {
+      pt.style.display = 'block';
+      pf.style.width = (n / totalSections * 100) + '%';
+      pl.textContent = 'STAP ' + n + ' / ' + totalSections;
+    } else {
+      pt.style.display = 'none';
+    }
+  }
+
+  function next(n) {
+    if (n === 1 && !v('company') && !v('contact') && !v('sector')) {
+      toast('Vul bedrijfsnaam, contactpersoon en sector in.'); return;
+    }
+    if (n === 2 && !v('problem_own') && !v('problem_real')) {
+      toast('Beschrijf het probleem (eigen woorden + jouw analyse).'); return;
+    }
+    if (n === 3 && !v('solution_feel')) {
+      toast('Geef je eerste gevoel over de oplossing.'); return;
+    }
+    showSection(n + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function prev(n) {
+    showSection(n - 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+  function r(name) { return document.querySelector(`input[name="${name}"]:checked`)?.value || 'Niet ingevuld'; }
+
+  function collectData() {
+    return {
+      company: v('company'), contact: v('contact'), email: v('email'),
+      website: v('website'), sector: v('sector'), size: r('size'),
+      tech: v('tech'), problem_own: v('problem_own'), problem_real: v('problem_real'),
+      affected_area: v('affected_area'), impact: v('impact'), tried: v('tried'),
+      solution_feel: v('solution_feel'), solution_type: r('soltype'),
+      must_have: v('must_have'), out_of_scope: v('out_of_scope'),
+      integrations: v('integrations'), budget: r('budget'), timeline: r('timeline'),
+      users: v('users'), compliance: v('compliance'), stakeholders: v('stakeholders'),
+      urgency: v('urgency'), complexity: r('complexity'), value: r('value'),
+      lead: r('lead'), open_questions: v('open_questions'), notes: v('notes')
+    };
+  }
+
+  async function generate() {
+    const d = collectData();
+    if (!d.solution_feel) { toast('Vul minimaal je oplossingsrichting in.'); return; }
+
+    // Hide form, show output
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById('progress-track').style.display = 'none';
+    const outSec = document.getElementById('output-section');
+    outSec.style.display = 'block';
+    const box = document.getElementById('output-box');
+    const genLabel = document.getElementById('generating-label');
+    box.textContent = '';
+    genLabel.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    const prompt = `Je bent een senior AI product consultant bij Zizai, een AI automation bedrijf. 
+Op basis van de onderstaande intake, schrijf je een uitgebreid en professioneel product brief document in het Nederlands.
+
+KLANTDATA:
+- Bedrijf: ${d.company} | Contact: ${d.contact} | Sector: ${d.sector} | Grootte: ${d.size}
+- Website: ${d.website || 'n.v.t.'} | Email: ${d.email || 'n.v.t.'}
+- Huidige tech stack: ${d.tech || 'Onbekend'}
+
+PROBLEEMSTELLING:
+- Probleem (eigen woorden klant): ${d.problem_own || 'n.v.t.'}
+- Root cause analyse (Zizai): ${d.problem_real || 'n.v.t.'}
+- Getroffen afdeling/proces: ${d.affected_area || 'n.v.t.'}
+- Huidige impact: ${d.impact || 'n.v.t.'}
+- Al geprobeerd: ${d.tried || 'Niets bekend'}
+
+OPLOSSING:
+- Eerste gevoel: ${d.solution_feel}
+- Type: ${d.solution_type}
+- Must-haves: ${d.must_have || 'n.v.t.'}
+- Buiten scope: ${d.out_of_scope || 'n.v.t.'}
+- Integraties: ${d.integrations || 'n.v.t.'}
+
+CONTEXT:
+- Budget: ${d.budget} | Tijdlijn: ${d.timeline}
+- Eindgebruikers: ${d.users || 'n.v.t.'}
+- Compliance: ${d.compliance || 'n.v.t.'}
+- Stakeholders: ${d.stakeholders || 'n.v.t.'}
+- Urgentie: ${d.urgency || 'n.v.t.'}
+
+ZIZAI INTERN:
+- Complexiteit: ${d.complexity}
+- Strategische waarde: ${d.value}
+- Projectlead: ${d.lead}
+- Open vragen: ${d.open_questions || 'Geen'}
+- Notities: ${d.notes || 'Geen'}
+
+Schrijf het product brief met de volgende secties:
+
+1. EXECUTIVE SUMMARY
+   Kernboodschap in 4-6 zinnen: wat is het probleem, wat bouwen we, wat is het resultaat.
+
+2. PROBLEEMANALYSE
+   Diepgaande analyse van het werkelijke probleem. Onderscheid tussen symptoom en root cause. Kwantificeer de impact waar mogelijk. Waarom is dit nu urgent?
+
+3. DOELGROEP & GEBRUIKERS
+   Wie zijn de eindgebruikers, wat is hun context, wat hebben ze nodig van de oplossing.
+
+4. VOORGESTELDE OPLOSSING
+   Wat gaan we bouwen. Architectuurrichting. Hoe lost het het werkelijke probleem op. Welke AI/automatisering technieken zijn relevant.
+
+5. MVP SCOPE
+   Wat zit er WEL in de eerste versie (geprioriteerd).
+   Wat zit er NIET in (expliciet out of scope).
+
+6. TECHNISCHE AANNAMES & RISICO'S
+   Wat nemen we aan. Welke technische onzekerheden zijn er. Wat zijn de grootste risico's.
+
+7. OPEN VRAGEN
+   Wat moet nog uitgezocht worden. Welke vragen moeten beantwoord worden voor we starten.
+
+8. PLANNING INDICATIE
+   Globale fasering. Mijlpalen. Tijdsinschatting per fase.
+
+9. ZIZAI INTERN (vertrouwelijk)
+   Strategische waarde. Complexiteitsinschatting. Wie trekt het. Aandachtspunten.
+
+Schrijf professioneel maar direct. Geen bullshit of opvulling. Gebruik duidelijke kopjes. Wees concreet en to-the-point. Schrijf alsof dit naar de klant gaat (behalve sectie 9).`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          stream: true,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      genLabel.style.display = 'none';
+      let text = '';
+      const cursor = document.createElement('span');
+      cursor.className = 'streaming-cursor';
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === 'content_block_delta' && data.delta?.text) {
+                text += data.delta.text;
+                box.textContent = text;
+                box.appendChild(cursor);
+                box.scrollIntoView({ block: 'end', behavior: 'smooth' });
+              }
+            } catch {}
+          }
+        }
+      }
+
+      cursor.remove();
+      box.textContent = text;
+      lastOutput = text;
+      document.getElementById('second-opinion-trigger').style.display = 'block';
+
+    } catch (err) {
+      genLabel.style.display = 'none';
+      box.textContent = '— Fout bij genereren: ' + err.message;
+    }
+  }
+
+  async function generateSecondOpinion() {
+    if (!lastOutput) return;
+    const d = collectData();
+    const soBox = document.getElementById('so-box');
+    const soGen = document.getElementById('so-generating');
+    soBox.style.display = 'block';
+    soBox.textContent = '';
+    soGen.style.display = 'block';
+
+    const prompt = `Je bent een kritische senior consultant die net de onderstaande product brief heeft gelezen voor een AI automation project van Zizai, een klein nieuw AI-bedrijf.
+
+Jouw rol: advocaat van de duivel. Geen beleefdheden. Directe, harde feedback.
+
+PRODUCT BRIEF:
+${lastOutput}
+
+EXTRA CONTEXT:
+- Klant: ${d.company} | Sector: ${d.sector}
+- Budget: ${d.budget} | Tijdlijn: ${d.timeline}
+- Oplossingstype: ${d.solution_type}
+- Zizai is een klein team van 2 personen, net opgestart
+
+Geef feedback op deze 5 punten — elk kort en puntig, geen bullshit:
+
+🔴 AANNAMES DIE GEVAARLIJK ZIJN
+Wat nemen ze aan zonder bewijs? Wat kan ze verassen?
+
+🔴 WAT ONTBREEKT IN DE PROBLEEMANALYSE
+Wat hebben ze niet gevraagd of onderzocht? Blinde vlekken?
+
+🔴 RISICO'S DIE ONDERSCHAT WORDEN
+Technisch, commercieel, relationeel — wat kan dit laten mislukken?
+
+🔴 IS DE SCOPE REALISTISCH?
+Voor een team van 2, dit budget, deze tijdlijn — eerlijk oordeel.
+
+🔴 ÉÉN DING DAT ZE ANDERS MOETEN DOEN
+Als je maar één advies mag geven — wat is het?
+
+Schrijf in het Nederlands. Kort. Direct. Geen sugarcoating.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          stream: true,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      soGen.style.display = 'none';
+      let text = '';
+      const cursor = document.createElement('span');
+      cursor.className = 'streaming-cursor';
+      cursor.style.background = 'var(--danger)';
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        for (const line of chunk.split('\n')) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === 'content_block_delta' && data.delta?.text) {
+                text += data.delta.text;
+                soBox.textContent = text;
+                soBox.appendChild(cursor);
+                soBox.scrollIntoView({ block: 'end', behavior: 'smooth' });
+              }
+            } catch {}
+          }
+        }
+      }
+
+      cursor.remove();
+      soBox.textContent = text;
+
+    } catch (err) {
+      soGen.style.display = 'none';
+      soBox.textContent = '— Fout: ' + err.message;
+    }
+  }
+
+  function saveProject() {
+    if (!lastOutput) { toast('Genereer eerst een brief.'); return; }
+    const d = collectData();
+    const key = 'zizai_' + Date.now();
+    const saved = {
+      key,
+      name: d.company || 'Onbekende klant',
+      date: new Date().toLocaleDateString('nl-NL'),
+      data: d,
+      output: lastOutput
+    };
+    try {
+      localStorage.setItem(key, JSON.stringify(saved));
+      toast('Opgeslagen!');
+      renderSaved();
+    } catch(e) {
+      toast('Opslaan mislukt — kopieer de tekst handmatig.');
+    }
+  }
+
+  function renderSaved() {
+    const list = document.getElementById('saved-list');
+    const sec = document.getElementById('saved-section');
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('zizai_')).sort().reverse();
+    if (keys.length === 0) { sec.style.display = 'none'; return; }
+    sec.style.display = 'block';
+    list.innerHTML = keys.map(k => {
+      const item = JSON.parse(localStorage.getItem(k));
+      return `<div class="saved-item">
+        <div>
+          <div class="saved-item-name">${item.name}</div>
+          <div class="saved-item-meta">${item.date}</div>
+        </div>
+        <div class="saved-actions">
+          <button class="btn-sm" onclick="loadProject('${k}')">OPEN</button>
+          <button class="btn-sm del" onclick="deleteProject('${k}')">DEL</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function loadProject(key) {
+    const item = JSON.parse(localStorage.getItem(key));
+    if (!item) return;
+    lastOutput = item.output;
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById('progress-track').style.display = 'none';
+    const outSec = document.getElementById('output-section');
+    outSec.style.display = 'block';
+    document.getElementById('output-box').textContent = item.output;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function deleteProject(key) {
+    localStorage.removeItem(key);
+    toast('Verwijderd');
+    renderSaved();
+  }
+
+  function copyOutput() {
+    navigator.clipboard.writeText(lastOutput).then(() => toast('Gekopieerd!')).catch(() => toast('Kopieer handmatig'));
+  }
+
+  function resetForm() {
+    document.querySelectorAll('.section').forEach(s => { s.style.display = ''; s.classList.remove('active'); });
+    document.getElementById('output-section').style.display = 'none';
+    document.getElementById('output-box').textContent = '';
+    document.getElementById('second-opinion-trigger').style.display = 'none';
+    document.getElementById('so-box').style.display = 'none';
+    document.getElementById('so-box').textContent = '';
+    lastOutput = '';
+    showSection(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Init
+  showSection(1);
+  renderSaved();
+</script>
+</body>
+</html>
