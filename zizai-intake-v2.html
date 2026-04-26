@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Intake v2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #161616;
+  --border: #222222;
+  --accent: #c8f060;
+  --accent2: #60c8f0;
+  --red: #f06060;
+  --text: #e8e8e0;
+  --muted: #555550;
+  --muted2: #888880;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200,240,96,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,240,96,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ======= LOGIN ======= */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-box {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 340px;
+  padding: 24px;
+  text-align: center;
+}
+
+.login-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 40px;
+  letter-spacing: -2px;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+.login-logo span { color: var(--text); }
+
+.login-sub {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 48px;
+}
+
+#pw-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  padding: 14px;
+  outline: none;
+  text-align: center;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+#pw-input:focus { border-color: var(--accent); }
+#pw-input.error { border-color: var(--red); animation: shake 0.3s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.login-err {
+  font-size: 11px;
+  color: var(--red);
+  height: 16px;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+#login-btn {
+  width: 100%;
+  background: var(--accent);
+  color: #0a0a0a;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#login-btn:hover { background: #d8ff70; }
+
+body.unlocked #login-screen {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+/* ======= SHELL ======= */
+.shell {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 24px 120px;
+}
+
+/* ======= HEADER ======= */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 48px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -1px;
+  color: var(--accent);
+}
+.logo span { color: var(--text); }
+.logo-sub {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.lang-toggle {
+  display: flex;
+  gap: 2px;
+}
+.lang-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.lang-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(200,240,96,0.06);
+}
+
+/* ======= SCREENS ======= */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ======= MODE SELECTOR ======= */
+.mode-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.mode-sub {
+  color: var(--muted2);
+  font-size: 12px;
+  margin-bottom: 36px;
+}
+
+.mode-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.mode-card {
+  border: 1px solid var(--border);
+  padding: 24px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  position: relative;
+}
+.mode-card:hover {
+  border-color: var(--accent2);
+  background: var(--surface2);
+}
+.mode-card.selected {
+  border-color: var(--accent);
+  background: rgba(200,240,96,0.04);
+}
+
+.mode-card-tag {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.mode-card-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.mode-card-desc {
+  font-size: 11px;
+  color: var(--muted2);
+  line-height: 1.6;
+}
+
+.mode-card.selected .mode-card-name { color: var(--accent); }
+
+/* ======= FORM ======= */
+.block {
+  margin-bottom: 36px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--border);
+}
+.block:last-child { border-bottom: none; }
+
+.block-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.block-num {
+  font-size: 10px;
+  color: var(--accent);
+  background: rgba(200,240,96,0.08);
+  border: 1px solid rgba(200,240,96,0.2);
+  padding: 3px 8px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.block-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.field { margin-bottom: 20px; }
+
+.field label {
+  display: block;
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+.field label .req { color: var(--accent); margin-left: 3px; }
+.field .hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 7px;
+  font-style: italic;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  padding: 11px 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: vertical;
+}
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(200,240,96,0.06);
+}
+textarea { min-height: 80px; }
+textarea.tall { min-height: 110px; }
+
+/* Pills */
+.pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.pill input { display: none; }
+.pill label {
+  display: inline-block;
+  padding: 6px 13px;
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+.pill input:checked + label {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(200,240,96,0.06);
+}
+.pill label:hover { border-color: var(--text); color: var(--text); }
+
+/* Checkboxes */
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.check-item:hover { border-color: var(--muted2); }
+.check-item input { display: none; }
+.check-item.checked {
+  border-color: var(--accent);
+  background: rgba(200,240,96,0.04);
+}
+.check-box {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--accent);
+  transition: all 0.15s;
+}
+.check-item.checked .check-box {
+  border-color: var(--accent);
+  background: rgba(200,240,96,0.15);
+}
+.check-label { font-size: 12px; }
+.check-item.checked .check-label { color: var(--accent); }
+
+/* Anders input */
+.anders-field {
+  display: none;
+  margin-top: 8px;
+}
+.anders-field.show { display: block; }
+.anders-field input {
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+/* ======= SECTOR GRID ======= */
+.sector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.sector-pill input { display: none; }
+.sector-pill label {
+  display: block;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  cursor: pointer;
+  font-size: 11px;
+  text-align: center;
+  transition: all 0.15s;
+}
+.sector-pill input:checked + label {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: rgba(96,200,240,0.06);
+}
+.sector-pill label:hover { border-color: var(--muted2); color: var(--text); }
+
+/* ======= NAV ======= */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 11px 24px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--accent); color: #0a0a0a; }
+.btn-primary:hover { background: #d8ff70; transform: translateY(-1px); }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted2);
+}
+.btn-ghost:hover { border-color: var(--text); color: var(--text); }
+.btn-generate { background: var(--accent2); color: #0a0a0a; font-size: 13px; padding: 13px 28px; }
+.btn-generate:hover { background: #80d8ff; transform: translateY(-1px); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #ff8080; }
+
+/* ======= AI SUGGESTION ======= */
+.ai-suggestion {
+  background: var(--surface2);
+  border: 1px solid rgba(200,240,96,0.2);
+  padding: 20px;
+  margin-top: 8px;
+}
+.ai-suggestion-label {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ai-suggestion-category {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.ai-suggestion-why {
+  font-size: 12px;
+  color: var(--muted2);
+  line-height: 1.7;
+}
+.ai-suggestion-loading {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ======= OUTPUT ======= */
+.output-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+}
+.output-tab {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+  margin-bottom: -1px;
+}
+.output-tab.active {
+  border-color: var(--border);
+  border-bottom-color: var(--bg);
+  color: var(--text);
+  background: var(--bg);
+}
+.output-tab:hover:not(.active) { color: var(--text); }
+.output-tab.locked { color: var(--muted); cursor: default; opacity: 0.4; }
+
+.output-panel { display: none; }
+.output-panel.active { display: block; }
+
+.output-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 28px;
+  white-space: pre-wrap;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--text);
+  min-height: 280px;
+}
+
+.output-box-red {
+  border-color: rgba(240,96,96,0.3);
+  background: #0f0808;
+}
+
+.output-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Generating */
+.gen-label {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 13px;
+  background: var(--accent);
+  animation: blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
+  margin-left: 1px;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Prompt pakket */
+.prompt-item {
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  background: var(--surface);
+}
+.prompt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.prompt-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+.prompt-body {
+  padding: 14px 16px;
+  font-size: 12px;
+  color: var(--muted2);
+  line-height: 1.8;
+}
+.prompt-locked {
+  opacity: 0.35;
+  position: relative;
+}
+.prompt-locked::after {
+  content: '🔒 Binnenkort beschikbaar';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+  background: rgba(10,10,10,0.7);
+}
+
+/* Saved projects */
+.saved-section {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.saved-title {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.saved-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  margin-bottom: 7px;
+  transition: all 0.15s;
+}
+.saved-item:hover { border-color: var(--accent2); }
+.saved-name { font-size: 13px; }
+.saved-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.saved-btns { display: flex; gap: 6px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--accent);
+  color: #0a0a0a;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 11px 18px;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 100;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+@media(max-width:600px) {
+  .mode-cards { grid-template-columns: 1fr; }
+  .sector-grid { grid-template-columns: repeat(2,1fr); }
+  .shell { padding: 24px 16px 80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Zizai<span>.</span></div>
+    <div class="login-sub">Internal access only</div>
+    <input type="password" id="pw-input" placeholder="········" autocomplete="off"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <div class="login-err" id="pw-err"></div>
+    <button id="login-btn" onclick="checkPw()">Enter →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="shell">
+  <header>
+    <div>
+      <div class="logo">Zizai<span>.</span></div>
+      <div class="logo-sub" id="header-sub">Intake Systeem</div>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('nl')">NL</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <!-- SCREEN: MODE -->
+  <div class="screen active" id="screen-mode">
+    <div class="mode-title" id="t-mode-title">Wat breng je mee?</div>
+    <div class="mode-sub" id="t-mode-sub">Kies de modus die past bij dit project.</div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="selectMode('client')" id="card-client">
+        <div class="mode-card-tag" id="t-tag-client">Externe opdracht</div>
+        <div class="mode-card-name">Client</div>
+        <div class="mode-card-desc" id="t-desc-client">Echte klant, concreet probleem, uitgebreide intake.</div>
+      </div>
+      <div class="mode-card" onclick="selectMode('inhouse')" id="card-inhouse">
+        <div class="mode-card-tag" id="t-tag-inhouse">Eigen initiatief</div>
+        <div class="mode-card-name">In-house</div>
+        <div class="mode-card-desc" id="t-desc-inhouse">Jullie eigen project. Wat wil je bouwen voor Zizai?</div>
+      </div>
+      <div class="mode-card" onclick="selectMode('sketch')" id="card-sketch">
+        <div class="mode-card-tag" id="t-tag-sketch">Vaag idee</div>
+        <div class="mode-card-name">Sketch</div>
+        <div class="mode-card-desc" id="t-desc-sketch">Nog geen structuur. Dump wat in je hoofd zit.</div>
+      </div>
+    </div>
+    <div class="nav">
+      <span></span>
+      <button class="btn btn-primary" onclick="startFlow()" id="t-btn-start">Starten →</button>
+    </div>
+    <div class="saved-section" id="saved-section" style="display:none">
+      <div class="saved-title" id="t-saved-title">Opgeslagen projecten</div>
+      <div id="saved-list"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: CLIENT -->
+  <div class="screen" id="screen-client">
+    <div class="block">
+      <div class="block-header">
+        <span class="block-num" id="t-blok1">BLOK 01</span>
+        <span class="block-title" id="t-blok1-title">Wie</span>
+      </div>
+      <div class="field">
+        <label id="t-company">Bedrijfsnaam <span class="req">*</span></label>
+        <input type="text" id="c-company" placeholder="bijv. Bakkerij De Wit BV">
+      </div>
+      <div class="field">
+        <label id="t-contact">Contactpersoon <span class="req">*</span></label>
+        <input type="text" id="c-contact" placeholder="Naam + functie">
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-num">BLOK 02</span>
+        <span class="block-title" id="t-blok2-title">Wat</span>
+      </div>
+
+      <div class="field">
+        <label id="t-sector-label">Sector</label>
+        <div class="sector-grid" id="sector-grid">
+          <div class="sector-pill"><input type="radio" name="sector" id="s-finance" value="Finance"><label for="s-finance">Finance</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-hr" value="HR"><label for="s-hr">HR</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-logistics" value="Logistics"><label for="s-logistics">Logistics</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-retail" value="Retail"><label for="s-retail">Retail</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-health" value="Healthcare"><label for="s-health">Healthcare</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-legal" value="Legal"><label for="s-legal">Legal</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-tech" value="Tech"><label for="s-tech">Tech</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-edu" value="Education"><label for="s-edu">Education</label></div>
+          <div class="sector-pill"><input type="radio" name="sector" id="s-other" value="Anders"><label for="s-other" id="t-other">Anders</label></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="t-enduser-label">Eindgebruiker van de oplossing <span class="req">*</span></label>
+        <div class="hint" id="t-enduser-hint">Wie gaat het écht gebruiken? Niet de opdrachtgever, maar de dagelijkse gebruiker.</div>
+        <input type="text" id="c-enduser" placeholder="bijv. 3 medewerkers klantenservice, niet technisch">
+      </div>
+
+      <div class="field">
+        <label id="t-problem-label">Kernprobleem — in hun eigen woorden <span class="req">*</span></label>
+        <div class="hint" id="t-problem-hint">Wat zeggen ze zelf dat het probleem is?</div>
+        <textarea class="tall" id="c-problem" placeholder="bijv. 'We verwerken 200 emails per dag handmatig en dat kost ons 3 FTE'"></textarea>
+      </div>
+
+      <div class="field">
+        <label id="t-hoe-label">Hoe gebeurt het nu?</label>
+        <div class="checks" id="checks-hoe">
+          <div class="check-item" onclick="toggleCheck(this,'hoe-handmatig')">
+            <input type="checkbox" id="hoe-handmatig" value="Handmatig">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-handmatig">Handmatig</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'hoe-deels')">
+            <input type="checkbox" id="hoe-deels" value="Deels geautomatiseerd">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-deels">Deels geautomatiseerd</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'hoe-systeem')">
+            <input type="checkbox" id="hoe-systeem" value="Systeem dat niet werkt">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-systeem">Systeem dat niet werkt</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="t-trigger-label">Wat triggert het proces?</label>
+        <div class="checks">
+          <div class="check-item" onclick="toggleCheck(this,'tr-email')">
+            <input type="checkbox" id="tr-email" value="Email">
+            <div class="check-box">✓</div>
+            <span class="check-label">Email</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'tr-form')">
+            <input type="checkbox" id="tr-form" value="Formulier">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-form">Formulier</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'tr-tijd')">
+            <input type="checkbox" id="tr-tijd" value="Tijdstip">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-tijdstip">Tijdstip</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'tr-mens')">
+            <input type="checkbox" id="tr-mens" value="Menselijke actie">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-mens">Menselijke actie</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'tr-anders'); toggleAnders('anders-trigger')">
+            <input type="checkbox" id="tr-anders" value="Anders">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-tr-anders">Anders</span>
+          </div>
+        </div>
+        <div class="anders-field" id="anders-trigger">
+          <input type="text" id="tr-anders-text" placeholder="Namelijk...">
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="t-mis-label">Wat gaat er mis of kost te veel tijd?</label>
+        <div class="checks">
+          <div class="check-item" onclick="toggleCheck(this,'mis-handmatig')">
+            <input type="checkbox" id="mis-handmatig" value="Te veel handmatig werk">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-mis-hw">Te veel handmatig werk</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'mis-fouten')">
+            <input type="checkbox" id="mis-fouten" value="Fouten door menselijke invoer">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-mis-f">Fouten door menselijke invoer</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'mis-info')">
+            <input type="checkbox" id="mis-info" value="Informatie raakt verloren">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-mis-i">Informatie raakt verloren</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'mis-lang')">
+            <input type="checkbox" id="mis-lang" value="Duurt te lang">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-mis-l">Duurt te lang</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'mis-sys')">
+            <input type="checkbox" id="mis-sys" value="Meerdere systemen die niet communiceren">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-mis-s">Meerdere systemen communiceren niet</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'mis-anders'); toggleAnders('anders-mis')">
+            <input type="checkbox" id="mis-anders" value="Anders">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-mis-a">Anders</span>
+          </div>
+        </div>
+        <div class="anders-field" id="anders-mis">
+          <input type="text" id="mis-anders-text" placeholder="Namelijk...">
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-num">BLOK 03</span>
+        <span class="block-title" id="t-blok3-title">AI Richting</span>
+      </div>
+      <div class="field">
+        <label id="t-ai-label">Claude denkt mee op basis van je antwoorden</label>
+        <div class="hint" id="t-ai-hint">Klik op "Analyseer" na het invullen van blok 2.</div>
+        <div class="ai-suggestion" id="ai-suggestion-box">
+          <div class="ai-suggestion-loading" id="ai-loading" style="display:none" id="t-ai-analyzing">● Analyseren...</div>
+          <div id="ai-result" style="display:none">
+            <div class="ai-suggestion-label">SUGGESTIE</div>
+            <div class="ai-suggestion-category" id="ai-category"></div>
+            <div class="ai-suggestion-why" id="ai-why"></div>
+          </div>
+          <div id="ai-placeholder" style="color:var(--muted);font-size:11px" id="t-ai-placeholder">Vul blok 2 in en klik op Analyseer →</div>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:10px;font-size:11px" onclick="analyzeAI()" id="t-btn-analyze">Analyseer →</button>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header">
+        <span class="block-num">BLOK 04</span>
+        <span class="block-title" id="t-blok4-title">Zizai Intern</span>
+      </div>
+      <div class="field">
+        <label id="t-tijd-label">Tijdsinvestering</label>
+        <div class="pills">
+          <div class="pill"><input type="radio" name="tijd" id="tijd-klein" value="Klein"><label for="tijd-klein" id="t-klein">Klein</label></div>
+          <div class="pill"><input type="radio" name="tijd" id="tijd-middel" value="Middel"><label for="tijd-middel" id="t-middel">Middel</label></div>
+          <div class="pill"><input type="radio" name="tijd" id="tijd-complex" value="Complex"><label for="tijd-complex" id="t-complex">Complex</label></div>
+        </div>
+      </div>
+      <div class="field">
+        <label id="t-waarde-label">Strategische waarde</label>
+        <div class="checks">
+          <div class="check-item" onclick="toggleCheck(this,'w-portfolio')">
+            <input type="checkbox" id="w-portfolio" value="Portfolio showcase">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-w-p">Portfolio showcase</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'w-recurring')">
+            <input type="checkbox" id="w-recurring" value="Recurring revenue">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-w-r">Recurring revenue</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'w-ref')">
+            <input type="checkbox" id="w-ref" value="Referentie klant">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-w-ref">Referentie klant</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'w-kennis')">
+            <input type="checkbox" id="w-kennis" value="Kennis opbouwen">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-w-k">Kennis opbouwen</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'w-markt')">
+            <input type="checkbox" id="w-markt" value="Markt testen">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-w-m">Markt testen</span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label id="t-vragen-label">Open vragen & twijfels</label>
+        <textarea id="c-vragen" placeholder="Wat weet je nog niet? Wat moet je uitzoeken?"></textarea>
+      </div>
+      <div class="field">
+        <label id="t-notities-label">Extra notities</label>
+        <textarea id="c-notities" placeholder="Alles wat je kwijt wil maar nergens past..."></textarea>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="showScreen('mode')" id="t-btn-back">← Terug</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="copyIntakePrompt('client')" id="t-btn-copy-prompt" style="border-color:var(--accent2);color:var(--accent2)">📋 Kopieer prompt</button>
+        <button class="btn btn-generate" onclick="generateOutput('client')" id="t-btn-generate">⚡ Genereer hier</button>
+      </div>
+    </div>
+    <div id="worker-notice" style="text-align:right;margin-top:8px;font-size:10px;color:var(--muted)">"Genereer hier" vereist Cloudflare Worker setup — zie documentatie.</div>
+  </div>
+
+  <!-- SCREEN: IN-HOUSE -->
+  <div class="screen" id="screen-inhouse">
+    <div class="block">
+      <div class="block-header">
+        <span class="block-num">01</span>
+        <span class="block-title" id="t-ih-title">Het project</span>
+      </div>
+      <div class="field">
+        <label id="t-ih-idee">Wat is het idee? <span class="req">*</span></label>
+        <textarea class="tall" id="ih-idee" placeholder="Beschrijf het idee in een paar zinnen..."></textarea>
+      </div>
+      <div class="field">
+        <label id="t-ih-doel">Wat is het doel?</label>
+        <div class="checks">
+          <div class="check-item" onclick="toggleCheck(this,'ih-werkwijze')">
+            <input type="checkbox" id="ih-werkwijze" value="Werkwijze verbeteren">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-w">Werkwijze verbeteren</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-kennis')">
+            <input type="checkbox" id="ih-kennis" value="Kennis opbouwen">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-k">Kennis opbouwen</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-markt')">
+            <input type="checkbox" id="ih-markt" value="Markt testen">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-m">Markt testen</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-ref')">
+            <input type="checkbox" id="ih-ref" value="Referentie creëren">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-r">Referentie creëren</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-income')">
+            <input type="checkbox" id="ih-income" value="Recurring income genereren">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-i">Recurring income genereren</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-doel-anders'); toggleAnders('anders-ih-doel')">
+            <input type="checkbox" id="ih-doel-anders" value="Anders">
+            <div class="check-box">✓</div>
+            <span class="check-label">Anders...</span>
+          </div>
+        </div>
+        <div class="anders-field" id="anders-ih-doel">
+          <input type="text" id="ih-doel-anders-text" placeholder="Namelijk...">
+        </div>
+      </div>
+      <div class="field">
+        <label id="t-ih-workflow">Waar past het in de Zizai workflow?</label>
+        <div class="checks">
+          <div class="check-item" onclick="toggleCheck(this,'ih-acquisitie')">
+            <input type="checkbox" id="ih-acquisitie" value="Acquisitie">
+            <div class="check-box">✓</div>
+            <div>
+              <span class="check-label" id="t-ih-acq">Acquisitie</span>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px" id="t-ih-acq-desc">Helpt ons nieuwe klanten vinden</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-intake')">
+            <input type="checkbox" id="ih-intake" value="Intake">
+            <div class="check-box">✓</div>
+            <div>
+              <span class="check-label" id="t-ih-int">Intake</span>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px" id="t-ih-int-desc">Helpt ons projecten starten</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-uitvoering')">
+            <input type="checkbox" id="ih-uitvoering" value="Uitvoering">
+            <div class="check-box">✓</div>
+            <div>
+              <span class="check-label" id="t-ih-uit">Uitvoering</span>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px" id="t-ih-uit-desc">Helpt ons bouwen</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-oplevering')">
+            <input type="checkbox" id="ih-oplevering" value="Oplevering">
+            <div class="check-box">✓</div>
+            <div>
+              <span class="check-label" id="t-ih-opl">Oplevering</span>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px" id="t-ih-opl-desc">Helpt ons iets afleveren aan klant</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-wf-anders'); toggleAnders('anders-ih-wf')">
+            <input type="checkbox" id="ih-wf-anders" value="Anders">
+            <div class="check-box">✓</div>
+            <span class="check-label">Anders...</span>
+          </div>
+        </div>
+        <div class="anders-field" id="anders-ih-wf">
+          <input type="text" id="ih-wf-anders-text" placeholder="Namelijk...">
+        </div>
+      </div>
+      <div class="field">
+        <label id="t-ih-nodig">Wat is er nodig?</label>
+        <div class="checks">
+          <div class="check-item" onclick="toggleCheck(this,'ih-tijd')">
+            <input type="checkbox" id="ih-tijd" value="Alleen tijd">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-t">Alleen tijd</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-api')">
+            <input type="checkbox" id="ih-api" value="Externe API of tool">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-api">Externe API of tool</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-data')">
+            <input type="checkbox" id="ih-data" value="Klantdata of input">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-d">Klantdata of input</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ih-budget')">
+            <input type="checkbox" id="ih-budget" value="Budget">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-ih-b">Budget</span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label id="t-ih-vragen">Open vragen & twijfels</label>
+        <textarea id="ih-vragen" placeholder="Wat weet je nog niet?"></textarea>
+      </div>
+      <div class="field">
+        <label id="t-ih-notities">Extra notities</label>
+        <textarea id="ih-notities" placeholder="Alles wat je kwijt wil..."></textarea>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="showScreen('mode')">← Terug</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="copyIntakePrompt('inhouse')" style="border-color:var(--accent2);color:var(--accent2)">📋 Kopieer prompt</button>
+        <button class="btn btn-generate" onclick="generateOutput('inhouse')">⚡ Genereer hier</button>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:8px;font-size:10px;color:var(--muted)">"Genereer hier" vereist Cloudflare Worker setup.</div>
+  </div>
+
+  <!-- SCREEN: SKETCH -->
+  <div class="screen" id="screen-sketch">
+    <div class="block">
+      <div class="block-header">
+        <span class="block-num">01</span>
+        <span class="block-title" id="t-sk-title">Dump het hier</span>
+      </div>
+      <div class="field">
+        <label id="t-sk-hoofd">Wat zit er in je hoofd? <span class="req">*</span></label>
+        <div class="hint" id="t-sk-hint">Geen structuur nodig. Gewoon schrijven.</div>
+        <textarea style="min-height:160px" id="sk-hoofd" placeholder="Laat maar komen..."></textarea>
+      </div>
+      <div class="field">
+        <label id="t-sk-trigger">Wat triggert dit?</label>
+        <div class="checks">
+          <div class="check-item" onclick="toggleCheck(this,'sk-probleem')">
+            <input type="checkbox" id="sk-probleem" value="Probleem dat ik zie">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-sk-p">Probleem dat ik zie</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sk-kans')">
+            <input type="checkbox" id="sk-kans" value="Kans die ik zie">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-sk-k">Kans die ik zie</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sk-stoort')">
+            <input type="checkbox" id="sk-stoort" value="Iets wat mij stoort">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-sk-s">Iets wat mij stoort</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'sk-cool')">
+            <input type="checkbox" id="sk-cool" value="Iets wat ik cool vind">
+            <div class="check-box">✓</div>
+            <span class="check-label" id="t-sk-c">Iets wat ik cool vind</span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label id="t-sk-extra">Extra notities</label>
+        <textarea id="sk-notities" placeholder="Optioneel..."></textarea>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="showScreen('mode')">← Terug</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="copyIntakePrompt('sketch')" style="border-color:var(--accent2);color:var(--accent2)">📋 Kopieer prompt</button>
+        <button class="btn btn-generate" onclick="generateOutput('sketch')">⚡ Genereer hier</button>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:8px;font-size:10px;color:var(--muted)">"Genereer hier" vereist Cloudflare Worker setup.</div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" style="font-size:11px" onclick="upgradeSketch('inhouse')" id="t-upgrade-ih">→ Uitwerken als In-house</button>
+      <button class="btn btn-ghost" style="font-size:11px" onclick="upgradeSketch('client')" id="t-upgrade-cl">→ Uitwerken als Client</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: OUTPUT -->
+  <div class="screen" id="screen-output">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px" id="output-title">Output</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px" id="output-subtitle"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-sm" onclick="saveProject()" id="t-save">OPSLAAN</button>
+        <button class="btn-sm" onclick="resetAll()" id="t-new">NIEUW</button>
+      </div>
+    </div>
+
+    <div class="output-tabs" id="output-tabs"></div>
+
+    <!-- Brief panel -->
+    <div class="output-panel" id="panel-brief">
+      <div class="gen-label" id="brief-gen-label" style="display:none">● GENEREREN</div>
+      <div class="output-box" id="brief-box"></div>
+      <div class="output-actions">
+        <button class="btn-sm" onclick="copyText('brief-box')" id="t-copy">KOPIEER</button>
+      </div>
+    </div>
+
+    <!-- Projectplan panel -->
+    <div class="output-panel" id="panel-plan">
+      <div class="gen-label" id="plan-gen-label" style="display:none">● GENEREREN</div>
+      <div class="output-box" id="plan-box"></div>
+      <div class="output-actions">
+        <button class="btn-sm" onclick="copyText('plan-box')" id="t-copy2">KOPIEER</button>
+      </div>
+    </div>
+
+    <!-- Prompts panel -->
+    <div class="output-panel" id="panel-prompts">
+      <div id="prompts-container"></div>
+    </div>
+
+    <!-- Advocaat panel -->
+    <div class="output-panel" id="panel-advocaat">
+      <div class="gen-label" id="adv-gen-label" style="display:none">● ANALYSEREN</div>
+      <div class="output-box output-box-red" id="adv-box"></div>
+      <div class="output-actions">
+        <button class="btn-sm" style="border-color:rgba(240,96,96,0.3);color:var(--muted2)" onclick="copyText('adv-box')" id="t-copy3">KOPIEER</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ======= STATE =======
+const PW = 'donebyfriday';
+const WORKER_URL = ''; // Vul hier je Cloudflare Worker URL in zodra opgezet
+let lang = 'nl';
+let mode = null;
+let lastBrief = '';
+let lastPlan = '';
+let currentMode = null;
+
+// ======= TRANSLATIONS =======
+const T = {
+  nl: {
+    'header-sub': 'Intake Systeem',
+    't-mode-title': 'Wat breng je mee?',
+    't-mode-sub': 'Kies de modus die past bij dit project.',
+    't-tag-client': 'Externe opdracht',
+    't-desc-client': 'Echte klant, concreet probleem, uitgebreide intake.',
+    't-tag-inhouse': 'Eigen initiatief',
+    't-desc-inhouse': 'Jullie eigen project. Wat wil je bouwen voor Zizai?',
+    't-tag-sketch': 'Vaag idee',
+    't-desc-sketch': 'Nog geen structuur. Dump wat in je hoofd zit.',
+    't-btn-start': 'Starten →',
+    't-saved-title': 'Opgeslagen projecten',
+    't-blok1-title': 'Wie',
+    't-blok2-title': 'Wat',
+    't-blok3-title': 'AI Richting',
+    't-blok4-title': 'Zizai Intern',
+    't-company': 'Bedrijfsnaam',
+    't-contact': 'Contactpersoon',
+    't-sector-label': 'Sector',
+    't-other': 'Anders',
+    't-enduser-label': 'Eindgebruiker van de oplossing',
+    't-enduser-hint': 'Wie gaat het écht gebruiken? Niet de opdrachtgever, maar de dagelijkse gebruiker.',
+    't-problem-label': 'Kernprobleem — in hun eigen woorden',
+    't-problem-hint': 'Wat zeggen ze zelf dat het probleem is?',
+    't-hoe-label': 'Hoe gebeurt het nu?',
+    't-handmatig': 'Handmatig',
+    't-deels': 'Deels geautomatiseerd',
+    't-systeem': 'Systeem dat niet werkt',
+    't-trigger-label': 'Wat triggert het proces?',
+    't-form': 'Formulier',
+    't-tijdstip': 'Tijdstip',
+    't-mens': 'Menselijke actie',
+    't-tr-anders': 'Anders',
+    't-mis-label': 'Wat gaat er mis of kost te veel tijd?',
+    't-mis-hw': 'Te veel handmatig werk',
+    't-mis-f': 'Fouten door menselijke invoer',
+    't-mis-i': 'Informatie raakt verloren',
+    't-mis-l': 'Duurt te lang',
+    't-mis-s': 'Meerdere systemen communiceren niet',
+    't-mis-a': 'Anders',
+    't-ai-label': 'Claude denkt mee op basis van je antwoorden',
+    't-ai-hint': 'Klik op "Analyseer" na het invullen van blok 2.',
+    't-ai-analyzing': '● Analyseren...',
+    't-ai-placeholder': 'Vul blok 2 in en klik op Analyseer →',
+    't-btn-analyze': 'Analyseer →',
+    't-tijd-label': 'Tijdsinvestering',
+    't-klein': 'Klein',
+    't-middel': 'Middel',
+    't-complex': 'Complex',
+    't-waarde-label': 'Strategische waarde',
+    't-w-p': 'Portfolio showcase',
+    't-w-r': 'Recurring revenue',
+    't-w-ref': 'Referentie klant',
+    't-w-k': 'Kennis opbouwen',
+    't-w-m': 'Markt testen',
+    't-vragen-label': 'Open vragen & twijfels',
+    't-notities-label': 'Extra notities',
+    't-btn-back': '← Terug',
+    't-btn-generate': '⚡ Genereer Output',
+    't-ih-title': 'Het project',
+    't-ih-idee': 'Wat is het idee?',
+    't-ih-doel': 'Wat is het doel?',
+    't-ih-w': 'Werkwijze verbeteren',
+    't-ih-k': 'Kennis opbouwen',
+    't-ih-m': 'Markt testen',
+    't-ih-r': 'Referentie creëren',
+    't-ih-i': 'Recurring income genereren',
+    't-ih-workflow': 'Waar past het in de Zizai workflow?',
+    't-ih-acq': 'Acquisitie',
+    't-ih-acq-desc': 'Helpt ons nieuwe klanten vinden',
+    't-ih-int': 'Intake',
+    't-ih-int-desc': 'Helpt ons projecten starten',
+    't-ih-uit': 'Uitvoering',
+    't-ih-uit-desc': 'Helpt ons bouwen',
+    't-ih-opl': 'Oplevering',
+    't-ih-opl-desc': 'Helpt ons iets afleveren aan klant',
+    't-ih-nodig': 'Wat is er nodig?',
+    't-ih-t': 'Alleen tijd',
+    't-ih-api': 'Externe API of tool',
+    't-ih-d': 'Klantdata of input',
+    't-ih-b': 'Budget',
+    't-ih-vragen': 'Open vragen & twijfels',
+    't-ih-notities': 'Extra notities',
+    't-sk-title': 'Dump het hier',
+    't-sk-hoofd': 'Wat zit er in je hoofd?',
+    't-sk-hint': 'Geen structuur nodig. Gewoon schrijven.',
+    't-sk-trigger': 'Wat triggert dit?',
+    't-sk-p': 'Probleem dat ik zie',
+    't-sk-k': 'Kans die ik zie',
+    't-sk-s': 'Iets wat mij stoort',
+    't-sk-c': 'Iets wat ik cool vind',
+    't-sk-extra': 'Extra notities',
+    't-upgrade-ih': '→ Uitwerken als In-house',
+    't-upgrade-cl': '→ Uitwerken als Client',
+    't-save': 'OPSLAAN',
+    't-new': 'NIEUW',
+    't-copy': 'KOPIEER',
+    't-copy2': 'KOPIEER',
+    't-copy3': 'KOPIEER',
+    'tab-brief': 'Brief',
+    'tab-plan': 'Projectplan',
+    'tab-prompts': 'Prompts',
+    'tab-advocaat': 'Advocaat',
+  },
+  en: {
+    'header-sub': 'Intake System',
+    't-mode-title': 'What are you bringing?',
+    't-mode-sub': 'Choose the mode that fits this project.',
+    't-tag-client': 'External project',
+    't-desc-client': 'Real client, concrete problem, full intake.',
+    't-tag-inhouse': 'Own initiative',
+    't-desc-inhouse': 'Your own project. What do you want to build for Zizai?',
+    't-tag-sketch': 'Vague idea',
+    't-desc-sketch': 'No structure yet. Dump what\'s in your head.',
+    't-btn-start': 'Start →',
+    't-saved-title': 'Saved projects',
+    't-blok1-title': 'Who',
+    't-blok2-title': 'What',
+    't-blok3-title': 'AI Direction',
+    't-blok4-title': 'Zizai Internal',
+    't-company': 'Company name',
+    't-contact': 'Contact person',
+    't-sector-label': 'Sector',
+    't-other': 'Other',
+    't-enduser-label': 'End user of the solution',
+    't-enduser-hint': 'Who will actually use it? Not the client, but the daily user.',
+    't-problem-label': 'Core problem — in their own words',
+    't-problem-hint': 'What do they say the problem is?',
+    't-hoe-label': 'How is it done now?',
+    't-handmatig': 'Manually',
+    't-deels': 'Partly automated',
+    't-systeem': 'System that doesn\'t work',
+    't-trigger-label': 'What triggers the process?',
+    't-form': 'Form',
+    't-tijdstip': 'Time-based',
+    't-mens': 'Human action',
+    't-tr-anders': 'Other',
+    't-mis-label': 'What goes wrong or takes too much time?',
+    't-mis-hw': 'Too much manual work',
+    't-mis-f': 'Errors from manual input',
+    't-mis-i': 'Information gets lost',
+    't-mis-l': 'Takes too long',
+    't-mis-s': 'Multiple systems don\'t communicate',
+    't-mis-a': 'Other',
+    't-ai-label': 'Claude thinks along based on your answers',
+    't-ai-hint': 'Click "Analyze" after filling in block 2.',
+    't-ai-analyzing': '● Analyzing...',
+    't-ai-placeholder': 'Fill in block 2 and click Analyze →',
+    't-btn-analyze': 'Analyze →',
+    't-tijd-label': 'Time investment',
+    't-klein': 'Small',
+    't-middel': 'Medium',
+    't-complex': 'Complex',
+    't-waarde-label': 'Strategic value',
+    't-w-p': 'Portfolio showcase',
+    't-w-r': 'Recurring revenue',
+    't-w-ref': 'Reference client',
+    't-w-k': 'Build knowledge',
+    't-w-m': 'Market test',
+    't-vragen-label': 'Open questions & doubts',
+    't-notities-label': 'Extra notes',
+    't-btn-back': '← Back',
+    't-btn-generate': '⚡ Generate Output',
+    't-ih-title': 'The project',
+    't-ih-idee': 'What is the idea?',
+    't-ih-doel': 'What is the goal?',
+    't-ih-w': 'Improve workflow',
+    't-ih-k': 'Build knowledge',
+    't-ih-m': 'Test market',
+    't-ih-r': 'Create reference',
+    't-ih-i': 'Generate recurring income',
+    't-ih-workflow': 'Where does it fit in the Zizai workflow?',
+    't-ih-acq': 'Acquisition',
+    't-ih-acq-desc': 'Helps us find new clients',
+    't-ih-int': 'Intake',
+    't-ih-int-desc': 'Helps us start projects',
+    't-ih-uit': 'Execution',
+    't-ih-uit-desc': 'Helps us build',
+    't-ih-opl': 'Delivery',
+    't-ih-opl-desc': 'Helps us deliver to client',
+    't-ih-nodig': 'What is needed?',
+    't-ih-t': 'Only time',
+    't-ih-api': 'External API or tool',
+    't-ih-d': 'Client data or input',
+    't-ih-b': 'Budget',
+    't-ih-vragen': 'Open questions & doubts',
+    't-ih-notities': 'Extra notes',
+    't-sk-title': 'Dump it here',
+    't-sk-hoofd': 'What\'s in your head?',
+    't-sk-hint': 'No structure needed. Just write.',
+    't-sk-trigger': 'What triggers this?',
+    't-sk-p': 'Problem I see',
+    't-sk-k': 'Opportunity I see',
+    't-sk-s': 'Something that bothers me',
+    't-sk-c': 'Something I find cool',
+    't-sk-extra': 'Extra notes',
+    't-upgrade-ih': '→ Develop as In-house',
+    't-upgrade-cl': '→ Develop as Client',
+    't-save': 'SAVE',
+    't-new': 'NEW',
+    't-copy': 'COPY',
+    't-copy2': 'COPY',
+    't-copy3': 'COPY',
+    'tab-brief': 'Brief',
+    'tab-plan': 'Project Plan',
+    'tab-prompts': 'Prompts',
+    'tab-advocaat': 'Devil\'s Advocate',
+  }
+};
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-btn[onclick="setLang('${l}')"]`).classList.add('active');
+  document.documentElement.lang = l;
+  // Update all translated elements
+  Object.keys(T[l]).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = T[l][id];
+  });
+}
+
+// ======= LOGIN =======
+function checkPw() {
+  const val = document.getElementById('pw-input').value;
+  const err = document.getElementById('pw-err');
+  const inp = document.getElementById('pw-input');
+  if (val === PW) {
+    document.body.classList.add('unlocked');
+    setTimeout(() => document.getElementById('login-screen').style.display = 'none', 400);
+    sessionStorage.setItem('za', '1');
+  } else {
+    err.textContent = lang === 'nl' ? 'Toegang geweigerd.' : 'Access denied.';
+    inp.classList.add('error');
+    inp.value = '';
+    setTimeout(() => { inp.classList.remove('error'); err.textContent = ''; }, 1000);
+  }
+}
+
+if (sessionStorage.getItem('za') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+}
+
+// ======= SCREENS =======
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (name === 'mode') renderSaved();
+}
+
+// ======= MODE =======
+function selectMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-' + m).classList.add('selected');
+}
+
+function startFlow() {
+  if (!mode) { toast(lang === 'nl' ? 'Kies een modus.' : 'Choose a mode.'); return; }
+  showScreen(mode);
+}
+
+// ======= CHECKBOXES =======
+function toggleCheck(el, id) {
+  el.classList.toggle('checked');
+  const cb = document.getElementById(id);
+  if (cb) cb.checked = el.classList.contains('checked');
+}
+
+function toggleAnders(fieldId) {
+  const f = document.getElementById(fieldId);
+  if (f) f.classList.toggle('show');
+}
+
+function getChecked(name) {
+  return Array.from(document.querySelectorAll(`input[id^="${name}"]:checked`))
+    .map(el => el.value).join(', ');
+}
+
+// ======= AI ANALYSIS =======
+async function analyzeAI() {
+  const problem = document.getElementById('c-problem')?.value || '';
+  const hoe = getChecked('hoe-');
+  const trigger = getChecked('tr-');
+  const mis = getChecked('mis-');
+
+  if (!problem) { toast(lang === 'nl' ? 'Vul eerst het kernprobleem in.' : 'Fill in the core problem first.'); return; }
+
+  document.getElementById('ai-placeholder').style.display = 'none';
+  document.getElementById('ai-result').style.display = 'none';
+  document.getElementById('ai-loading').style.display = 'block';
+
+  const prompt = `Je bent een AI solution architect. Analyseer dit probleem en geef in JSON terug welke categorie van toepassing is.
+
+Probleem: ${problem}
+Hoe nu: ${hoe || 'onbekend'}
+Trigger: ${trigger || 'onbekend'}
+Wat gaat mis: ${mis || 'onbekend'}
+
+Kies één categorie (of combinatie) en geef een één zin uitleg waarom:
+- Automatisering: repetitief, vaste trigger, geen beslissingen
+- AI Agent: meerdere stappen, maakt beslissingen, werkt zelfstandig
+- LLM Integratie: tekst verwerken, begrijpen, genereren
+- Data Pipeline / Integratie: systemen koppelen, geen AI nodig
+- Decision Support: mens beslist, AI geeft inzicht
+- Combinatie: meerdere categorieën
+
+Antwoord ALLEEN in dit JSON formaat, geen andere tekst:
+{"category": "naam", "why": "één zin uitleg in het ${lang === 'nl' ? 'Nederlands' : 'Engels'}"}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-result').style.display = 'block';
+    document.getElementById('ai-category').textContent = parsed.category;
+    document.getElementById('ai-why').textContent = parsed.why;
+  } catch(e) {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-placeholder').style.display = 'block';
+    document.getElementById('ai-placeholder').textContent = 'Analyse mislukt. Probeer opnieuw.';
+  }
+}
+
+// ======= COPY PROMPT FOR CLAUDE.AI =======
+function copyIntakePrompt(m) {
+  if (m === 'client' && !document.getElementById('c-company')?.value) {
+    toast(lang === 'nl' ? 'Vul minimaal bedrijfsnaam in.' : 'Fill in company name at least.'); return;
+  }
+  if (m === 'inhouse' && !document.getElementById('ih-idee')?.value) {
+    toast(lang === 'nl' ? 'Beschrijf het idee.' : 'Describe the idea.'); return;
+  }
+  if (m === 'sketch' && !document.getElementById('sk-hoofd')?.value) {
+    toast(lang === 'nl' ? 'Schrijf iets op.' : 'Write something down.'); return;
+  }
+
+  const d = collectData(m);
+  const isNL = lang === 'nl';
+  let prompt = '';
+
+  if (m === 'client') {
+    prompt = `Je bent een senior AI consultant bij Zizai, een AI automation bureau. Genereer de volgende outputs op basis van deze intake:
+
+━━━ INTAKE DATA ━━━
+Bedrijf: ${d.company}
+Contact: ${d.contact}
+Sector: ${d.sector}
+Eindgebruiker: ${d.enduser}
+Kernprobleem: ${d.problem}
+Hoe nu: ${d.hoe || 'n.v.t.'}
+Trigger: ${d.trigger || 'n.v.t.'}
+Wat gaat mis: ${d.mis || 'n.v.t.'}
+AI categorie suggestie: ${d.aiCategory || 'nog niet geanalyseerd'}
+Tijdsinvestering: ${d.tijd || 'n.v.t.'}
+Strategische waarde: ${d.waarde || 'n.v.t.'}
+Open vragen: ${d.vragen || 'n.v.t.'}
+Notities: ${d.notities || 'n.v.t.'}
+
+━━━ OUTPUT 1: PRODUCT BRIEF ━━━
+Schrijf een professionele product brief met:
+- Probleemanalyse (root cause, impact)
+- Voorgestelde oplossing + AI categorie
+- Eindgebruiker
+- MVP scope (wel in / niet in)
+- Volgende stappen
+
+━━━ OUTPUT 2: PROJECTPLAN ━━━
+Simpel projectplan:
+- Wat bouwen we (één zin)
+- Fase 1, 2, 3
+- Eerste volgende stap (morgen)
+Geen datums, geen uren. Alleen richting.
+
+━━━ OUTPUT 3: ADVOCAAT VAN DE DUIVEL ━━━
+Kritische second opinion:
+- Gevaarlijke aannames
+- Blinde vlekken
+- Onderschatte risico's
+- Is scope realistisch voor een team van 2?
+- Één ding dat anders moet
+
+Schrijf in het ${isNL ? 'Nederlands' : 'Engels'}. Direct, professioneel, geen opvulling.`;
+
+  } else if (m === 'inhouse') {
+    prompt = `Je bent een senior AI consultant bij Zizai. Genereer de volgende outputs voor dit interne project:
+
+━━━ INTAKE DATA ━━━
+Idee: ${d.idee}
+Doel: ${d.doel || 'n.v.t.'}
+Workflow plek: ${d.workflow || 'n.v.t.'}
+Wat nodig: ${d.nodig || 'n.v.t.'}
+Open vragen: ${d.vragen || 'n.v.t.'}
+Notities: ${d.notities || 'n.v.t.'}
+
+━━━ OUTPUT 1: PROJECT BRIEF ━━━
+- Idee + doel
+- Waar het past in Zizai workflow
+- Wat er nodig is
+- Volgende stappen
+
+━━━ OUTPUT 2: PROJECTPLAN ━━━
+- Wat bouwen we (één zin)
+- Fase 1, 2, 3
+- Eerste volgende stap (morgen)
+
+━━━ OUTPUT 3: ADVOCAAT VAN DE DUIVEL ━━━
+- Gevaarlijke aannames
+- Blinde vlekken
+- Is dit realistisch voor een team van 2?
+- Één ding dat anders moet
+
+Schrijf in het ${isNL ? 'Nederlands' : 'Engels'}. Direct en to the point.`;
+
+  } else {
+    prompt = `Je bent een senior AI consultant bij Zizai. Analyseer dit ruwe idee:
+
+━━━ INTAKE DATA ━━━
+Idee: ${d.hoofd}
+Trigger: ${d.trigger || 'n.v.t.'}
+Notities: ${d.notities || 'n.v.t.'}
+
+━━━ OUTPUT: SKETCH BRIEF ━━━
+- Kernidee (wat is hier eigenlijk de essentie)
+- Potentie (wat kan dit worden)
+- Wat nog onduidelijk is
+- Aanbeveling: uitwerken als Client of In-house? Waarom?
+
+Schrijf in het ${isNL ? 'Nederlands' : 'Engels'}. Kort en eerlijk.`;
+  }
+
+  navigator.clipboard.writeText(prompt).then(() => {
+    toast(lang === 'nl' ? '✓ Prompt gekopieerd — plak in claude.ai' : '✓ Prompt copied — paste in claude.ai');
+  }).catch(() => {
+    // Fallback: show in a textarea
+    const ta = document.createElement('textarea');
+    ta.value = prompt;
+    ta.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);width:80%;height:300px;z-index:9999;background:#111;color:#e8e8e0;padding:16px;border:1px solid var(--accent);font-family:monospace;font-size:12px';
+    document.body.appendChild(ta);
+    ta.select();
+    toast(lang === 'nl' ? 'Selecteer alles en kopieer handmatig' : 'Select all and copy manually');
+    setTimeout(() => ta.remove(), 8000);
+  });
+}
+
+// ======= GENERATE OUTPUT =======
+async function generateOutput(m) {
+  // Check if Cloudflare Worker is configured
+  if (!WORKER_URL) {
+    const msg = lang === 'nl'
+      ? '⚡ "Genereer hier" werkt zodra de Cloudflare Worker is opgezet.\n\nGebruik nu "📋 Kopieer prompt" om de output in claude.ai te genereren.'
+      : '⚡ "Generate here" works once the Cloudflare Worker is set up.\n\nUse "📋 Copy prompt" to generate output in claude.ai for now.';
+    alert(msg);
+    return;
+  }
+
+  currentMode = m;
+
+  // Validate
+  if (m === 'client' && !document.getElementById('c-company')?.value) {
+    toast(lang === 'nl' ? 'Vul minimaal bedrijfsnaam in.' : 'Fill in company name at least.'); return;
+  }
+  if (m === 'inhouse' && !document.getElementById('ih-idee')?.value) {
+    toast(lang === 'nl' ? 'Beschrijf het idee.' : 'Describe the idea.'); return;
+  }
+  if (m === 'sketch' && !document.getElementById('sk-hoofd')?.value) {
+    toast(lang === 'nl' ? 'Schrijf iets op.' : 'Write something down.'); return;
+  }
+
+  showScreen('output');
+
+  // Build tabs based on mode
+  buildTabs(m);
+
+  // Set title
+  let title = '';
+  if (m === 'client') title = document.getElementById('c-company')?.value || 'Client';
+  else if (m === 'inhouse') title = 'In-house';
+  else title = 'Sketch';
+
+  document.getElementById('output-title').textContent = title;
+  document.getElementById('output-subtitle').textContent = new Date().toLocaleDateString(lang === 'nl' ? 'nl-NL' : 'en-GB', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  // Generate brief first
+  await generateBrief(m);
+
+  // Generate plan if not sketch
+  if (m !== 'sketch') {
+    await generatePlan(m);
+  }
+
+  // Build prompts
+  buildPrompts(m);
+
+  // Generate advocaat
+  await generateAdvocaat(m);
+}
+
+function buildTabs(m) {
+  const tabs = document.getElementById('output-tabs');
+  const tl = T[lang];
+  let html = `<button class="output-tab active" onclick="showTab('brief')">${tl['tab-brief']}</button>`;
+  if (m !== 'sketch') {
+    html += `<button class="output-tab" onclick="showTab('plan')">${tl['tab-plan']}</button>`;
+    html += `<button class="output-tab" onclick="showTab('prompts')">${tl['tab-prompts']}</button>`;
+  }
+  html += `<button class="output-tab" onclick="showTab('advocaat')">${tl['tab-advocaat']}</button>`;
+  tabs.innerHTML = html;
+
+  // Show only brief panel initially
+  ['brief','plan','prompts','advocaat'].forEach(p => {
+    const el = document.getElementById('panel-' + p);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('panel-brief').classList.add('active');
+}
+
+function showTab(name) {
+  document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.output-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+async function generateBrief(m) {
+  const box = document.getElementById('brief-box');
+  const gen = document.getElementById('brief-gen-label');
+  box.textContent = '';
+  gen.style.display = 'block';
+
+  const data = collectData(m);
+  const isNL = lang === 'nl';
+
+  let prompt = '';
+  if (m === 'client') {
+    prompt = `Je bent een senior AI consultant bij Zizai. Schrijf een professionele product brief in het ${isNL ? 'Nederlands' : 'Engels'}.
+
+KLANT: ${data.company} | Contact: ${data.contact} | Sector: ${data.sector}
+EINDGEBRUIKER: ${data.enduser}
+PROBLEEM (eigen woorden): ${data.problem}
+HOE NU: ${data.hoe}
+TRIGGER: ${data.trigger}
+WAT GAAT MIS: ${data.mis}
+AI CATEGORIE: ${data.aiCategory || 'nog niet geanalyseerd'}
+TIJDSINVESTERING: ${data.tijd}
+STRATEGISCHE WAARDE: ${data.waarde}
+OPEN VRAGEN: ${data.vragen}
+NOTITIES: ${data.notities}
+
+Schrijf de brief met deze secties:
+
+PROBLEEMANALYSE
+Diepgang, root cause, impact.
+
+VOORGESTELDE OPLOSSING + AI CATEGORIE
+Wat gaan we bouwen en waarom deze aanpak.
+
+EINDGEBRUIKER
+Wie zijn het, wat hebben ze nodig.
+
+MVP SCOPE
+Wat zit er WEL in. Wat expliciet NIET.
+
+VOLGENDE STAPPEN
+Concrete acties, geen abstracties.
+
+Direct, professioneel, geen opvulling.`;
+  } else if (m === 'inhouse') {
+    prompt = `Je bent een senior AI consultant bij Zizai. Schrijf een interne project brief in het ${isNL ? 'Nederlands' : 'Engels'}.
+
+IDEE: ${data.idee}
+DOEL: ${data.doel}
+WORKFLOW PLEK: ${data.workflow}
+WAT NODIG: ${data.nodig}
+OPEN VRAGEN: ${data.vragen}
+NOTITIES: ${data.notities}
+
+Secties:
+
+IDEE + DOEL
+Wat is het en waarom doen we het.
+
+WAAR HET PAST
+Hoe dit bijdraagt aan Zizai's werkwijze.
+
+WAT ER NODIG IS
+Concreet overzicht van benodigdheden.
+
+VOLGENDE STAPPEN
+Wat doe je morgen.
+
+Intern, direct, to the point.`;
+  } else {
+    prompt = `Je bent een senior AI consultant bij Zizai. Schrijf een korte sketch brief in het ${isNL ? 'Nederlands' : 'Engels'}.
+
+IDEE: ${data.hoofd}
+TRIGGER: ${data.trigger}
+NOTITIES: ${data.notities}
+
+Secties:
+
+KERNIDEE
+Wat is hier eigenlijk de essentie.
+
+POTENTIE
+Wat kan dit worden als het uitgewerkt wordt.
+
+WAT NOG ONDUIDELIJK IS
+Wat moet beantwoord worden voor dit verder kan.
+
+AANBEVELING
+Uitwerken als Client of In-house? Waarom?
+
+Kort, scherp, eerlijk.`;
+  }
+
+  await streamTo(prompt, box, gen, (text) => { lastBrief = text; });
+}
+
+async function generatePlan(m) {
+  const box = document.getElementById('plan-box');
+  const gen = document.getElementById('plan-gen-label');
+  box.textContent = '';
+  gen.style.display = 'block';
+
+  const isNL = lang === 'nl';
+  const prompt = `Op basis van deze brief, schrijf een simpel projectplan in het ${isNL ? 'Nederlands' : 'Engels'}:
+
+${lastBrief}
+
+Format (exact zo):
+
+WAT BOUWEN WE
+[één zin]
+
+FASE 1 — [naam]
+[wat eerst, 2-3 regels]
+
+FASE 2 — [naam]
+[wat daarna, 2-3 regels]
+
+FASE 3 — [naam]
+[oplevering/live, 2-3 regels]
+
+EERSTE VOLGENDE STAP
+[wat doe je morgen, één concrete actie]
+
+Geen datums, geen uren. Alleen richting. Direct en concreet.`;
+
+  await streamTo(prompt, box, gen, (text) => { lastPlan = text; });
+}
+
+function buildPrompts(m) {
+  const container = document.getElementById('prompts-container');
+  const isNL = lang === 'nl';
+
+  const prompts = [
+    {
+      name: isNL ? 'Begrijpen we het probleem echt?' : 'Do we really understand the problem?',
+      desc: isNL ? 'Voorkomt bouwen van het verkeerde.' : 'Prevents building the wrong thing.',
+      text: isNL
+        ? `Ik ga een project starten. Dit is de briefing:\n\n${lastBrief}\n\nStel mij 5 kritische vragen om te valideren dat ik het werkelijke probleem begrijp. Niet het symptoom, maar de echte root cause. Vraag door op aannames die ik maak.`
+        : `I'm starting a project. This is the briefing:\n\n${lastBrief}\n\nAsk me 5 critical questions to validate that I understand the real problem. Not the symptom, but the actual root cause. Probe the assumptions I'm making.`,
+      locked: false
+    },
+    {
+      name: isNL ? 'Wat is de kleinste versie die waarde levert?' : 'What is the smallest version that delivers value?',
+      desc: isNL ? 'MVP focus. Snijden wat niet nodig is.' : 'MVP focus. Cut what\'s not needed.',
+      text: isNL
+        ? `Dit is onze project brief:\n\n${lastBrief}\n\nHelp me de absolute MVP te definiëren. Wat is het allerkleinste dat al waarde levert voor de eindgebruiker? Wat kan weg in fase 1? Wees streng.`
+        : `This is our project brief:\n\n${lastBrief}\n\nHelp me define the absolute MVP. What is the smallest thing that already delivers value for the end user? What can be cut from phase 1? Be strict.`,
+      locked: false
+    },
+    {
+      name: isNL ? 'Wat kan ons verrassen?' : 'What could surprise us?',
+      desc: isNL ? 'Risico\'s en aannames blootleggen.' : 'Surface risks and assumptions.',
+      text: isNL
+        ? `Dit is onze project brief:\n\n${lastBrief}\n\nWat zijn de 5 grootste risico's en aannames in dit project die ons kunnen verrassen? Wees eerlijk en direct. Geen sugarcoating.`
+        : `This is our project brief:\n\n${lastBrief}\n\nWhat are the 5 biggest risks and assumptions in this project that could surprise us? Be honest and direct. No sugarcoating.`,
+      locked: false
+    },
+    { name: isNL ? 'Technische analyse' : 'Technical analysis', desc: isNL ? 'Architectuur en technische risico\'s.' : 'Architecture and technical risks.', text: '', locked: true },
+    { name: isNL ? 'Integratie check' : 'Integration check', desc: isNL ? 'Welke systemen moeten koppelen?' : 'Which systems need to connect?', text: '', locked: true },
+    { name: isNL ? 'Pricing model' : 'Pricing model', desc: isNL ? 'Hoe prijzen we dit?' : 'How do we price this?', text: '', locked: true },
+    { name: isNL ? 'Gebruikersonderzoek' : 'User research', desc: isNL ? 'Wie is de eindgebruiker echt?' : 'Who is the end user really?', text: '', locked: true },
+    { name: isNL ? 'MVP definitie' : 'MVP definition', desc: isNL ? 'Formele scope afbakening.' : 'Formal scope definition.', text: '', locked: true },
+  ];
+
+  container.innerHTML = prompts.map((p, i) => `
+    <div class="prompt-item ${p.locked ? 'prompt-locked' : ''}">
+      <div class="prompt-header">
+        <div class="prompt-name">${p.name}</div>
+        ${!p.locked ? `<button class="btn-sm" onclick="copyPrompt(${i})">KOPIEER</button>` : ''}
+      </div>
+      <div class="prompt-body">${p.desc}</div>
+    </div>
+  `).join('');
+
+  // Store prompts for copying
+  window._prompts = prompts;
+}
+
+function copyPrompt(i) {
+  const p = window._prompts[i];
+  if (!p || !p.text) return;
+  navigator.clipboard.writeText(p.text).then(() => toast(lang === 'nl' ? 'Prompt gekopieerd!' : 'Prompt copied!'));
+}
+
+async function generateAdvocaat(m) {
+  const box = document.getElementById('adv-box');
+  const gen = document.getElementById('adv-gen-label');
+  box.textContent = '';
+  gen.style.display = 'block';
+
+  const isNL = lang === 'nl';
+  const prompt = `Je bent een kritische senior consultant. Je hebt net deze brief gelezen. Speel advocaat van de duivel. Geen beleefdheden. Direct.
+
+${lastBrief}
+
+Geef feedback in het ${isNL ? 'Nederlands' : 'Engels'} op:
+
+🔴 GEVAARLIJKE AANNAMES
+Wat nemen ze aan zonder bewijs?
+
+🔴 BLINDE VLEKKEN
+Wat hebben ze niet onderzocht of gevraagd?
+
+🔴 ONDERSCHATTE RISICO'S
+Wat kan dit laten mislukken?
+
+🔴 IS DE SCOPE REALISTISCH?
+Voor een klein team van 2 — eerlijk oordeel.
+
+🔴 ÉÉN DING DAT ANDERS MOET
+Als je maar één advies mag geven.
+
+Kort. Direct. Geen sugarcoating.`;
+
+  await streamTo(prompt, box, gen, () => {});
+}
+
+async function streamTo(prompt, box, genLabel, onDone) {
+  let text = '';
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        stream: true,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    genLabel.style.display = 'none';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      for (const line of chunk.split('\n')) {
+        if (line.startsWith('data: ')) {
+          try {
+            const d = JSON.parse(line.slice(6));
+            if (d.type === 'content_block_delta' && d.delta?.text) {
+              text += d.delta.text;
+              box.textContent = text;
+              box.appendChild(cursor);
+              box.scrollIntoView({ block: 'end', behavior: 'smooth' });
+            }
+          } catch {}
+        }
+      }
+    }
+
+    cursor.remove();
+    box.textContent = text;
+    onDone(text);
+  } catch(e) {
+    genLabel.style.display = 'none';
+    box.textContent = '— Fout: ' + e.message;
+  }
+}
+
+// ======= COLLECT DATA =======
+function collectData(m) {
+  if (m === 'client') {
+    return {
+      company: document.getElementById('c-company')?.value || '',
+      contact: document.getElementById('c-contact')?.value || '',
+      sector: document.querySelector('input[name="sector"]:checked')?.value || 'n.v.t.',
+      enduser: document.getElementById('c-enduser')?.value || '',
+      problem: document.getElementById('c-problem')?.value || '',
+      hoe: getChecked('hoe-'),
+      trigger: getChecked('tr-') + (document.getElementById('tr-anders-text')?.value ? ' + ' + document.getElementById('tr-anders-text').value : ''),
+      mis: getChecked('mis-') + (document.getElementById('mis-anders-text')?.value ? ' + ' + document.getElementById('mis-anders-text').value : ''),
+      aiCategory: document.getElementById('ai-category')?.textContent || '',
+      tijd: document.querySelector('input[name="tijd"]:checked')?.value || 'n.v.t.',
+      waarde: getChecked('w-'),
+      vragen: document.getElementById('c-vragen')?.value || '',
+      notities: document.getElementById('c-notities')?.value || '',
+    };
+  } else if (m === 'inhouse') {
+    return {
+      idee: document.getElementById('ih-idee')?.value || '',
+      doel: getChecked('ih-werkwijze') + getChecked('ih-kennis') + getChecked('ih-markt') + getChecked('ih-ref') + getChecked('ih-income') + (document.getElementById('ih-doel-anders-text')?.value || ''),
+      workflow: getChecked('ih-acquisitie') + getChecked('ih-intake') + getChecked('ih-uitvoering') + getChecked('ih-oplevering') + (document.getElementById('ih-wf-anders-text')?.value || ''),
+      nodig: getChecked('ih-tijd') + getChecked('ih-api') + getChecked('ih-data') + getChecked('ih-budget'),
+      vragen: document.getElementById('ih-vragen')?.value || '',
+      notities: document.getElementById('ih-notities')?.value || '',
+    };
+  } else {
+    return {
+      hoofd: document.getElementById('sk-hoofd')?.value || '',
+      trigger: getChecked('sk-'),
+      notities: document.getElementById('sk-notities')?.value || '',
+    };
+  }
+}
+
+// ======= SKETCH UPGRADE =======
+function upgradeSketch(to) {
+  const hoofd = document.getElementById('sk-hoofd')?.value || '';
+  mode = to;
+  showScreen(to);
+  if (to === 'inhouse') {
+    document.getElementById('ih-idee').value = hoofd;
+  } else if (to === 'client') {
+    document.getElementById('c-problem').value = hoofd;
+  }
+  toast(lang === 'nl' ? 'Sketch overgezet!' : 'Sketch transferred!');
+}
+
+// ======= SAVE / LOAD =======
+function saveProject() {
+  if (!lastBrief) { toast(lang === 'nl' ? 'Genereer eerst output.' : 'Generate output first.'); return; }
+  const m = currentMode;
+  const data = collectData(m);
+  const name = m === 'client' ? (data.company || 'Client') : m === 'inhouse' ? 'In-house' : 'Sketch';
+  const key = 'zz_' + Date.now();
+  localStorage.setItem(key, JSON.stringify({
+    key, name, mode: m, date: new Date().toLocaleDateString(lang === 'nl' ? 'nl-NL' : 'en-GB'),
+    brief: lastBrief, plan: lastPlan, data
+  }));
+  toast(lang === 'nl' ? 'Opgeslagen!' : 'Saved!');
+  renderSaved();
+}
+
+function renderSaved() {
+  const list = document.getElementById('saved-list');
+  const sec = document.getElementById('saved-section');
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('zz_')).sort().reverse();
+  if (!keys.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = keys.map(k => {
+    const item = JSON.parse(localStorage.getItem(k));
+    return `<div class="saved-item">
+      <div>
+        <div class="saved-name">${item.name}</div>
+        <div class="saved-meta">${item.mode} · ${item.date}</div>
+      </div>
+      <div class="saved-btns">
+        <button class="btn-sm" onclick="loadProject('${k}')">OPEN</button>
+        <button class="btn-sm" style="color:var(--red)" onclick="deleteProject('${k}')">DEL</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadProject(key) {
+  const item = JSON.parse(localStorage.getItem(key));
+  if (!item) return;
+  lastBrief = item.brief;
+  lastPlan = item.plan || '';
+  currentMode = item.mode;
+  showScreen('output');
+  document.getElementById('output-title').textContent = item.name;
+  document.getElementById('output-subtitle').textContent = item.date;
+  buildTabs(item.mode);
+  document.getElementById('brief-box').textContent = item.brief;
+  if (item.plan) document.getElementById('plan-box').textContent = item.plan;
+  buildPrompts(item.mode);
+  document.getElementById('adv-box').textContent = lang === 'nl' ? '— Klik op de tab om advocaat opnieuw te genereren.' : '— Click the tab to regenerate devil\'s advocate.';
+}
+
+function deleteProject(key) {
+  localStorage.removeItem(key);
+  toast(lang === 'nl' ? 'Verwijderd.' : 'Deleted.');
+  renderSaved();
+}
+
+function resetAll() {
+  lastBrief = '';
+  lastPlan = '';
+  currentMode = null;
+  mode = null;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  showScreen('mode');
+}
+
+// ======= UTILS =======
+function copyText(boxId) {
+  const text = document.getElementById(boxId)?.textContent || '';
+  navigator.clipboard.writeText(text).then(() => toast(lang === 'nl' ? 'Gekopieerd!' : 'Copied!'));
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ======= INIT =======
+renderSaved();
+</script>
+</body>
+</html>
