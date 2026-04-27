@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Logo Varianten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Spectral:ital,wght@0,200;0,300;0,400;1,200;1,300&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --parchment: #EFE6D6;
+  --sand: #E2D4BD;
+  --char: #241C14;
+  --terracotta: #B9532C;
+  --bronze: #7C6A4E;
+}
+body {
+  background: #161210;
+  font-family: 'IBM Plex Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+  padding: 56px 60px 100px;
+}
+
+.page-header {
+  margin-bottom: 56px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+.page-title { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(239,230,214,0.22); }
+.page-hint { font-size: 10px; letter-spacing: 0.1em; color: rgba(239,230,214,0.1); }
+
+/* ── Section header ── */
+.section-head {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(239,230,214,0.15);
+  margin-bottom: 20px;
+  margin-top: 56px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.section-head:first-of-type { margin-top: 0; }
+
+/* ── Grid ── */
+.row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 4px; }
+
+/* ── Artboard shell ── */
+.ab {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.ab-label { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(239,230,214,0.18); }
+.ab-note { font-size: 9px; letter-spacing: 0.08em; color: rgba(239,230,214,0.1); margin-top: 2px; line-height: 1.5; }
+.board { overflow: hidden; }
+
+/* ─────────────────────────────────────────────────
+   STACKED VARIANTS (primary direction)
+   ───────────────────────────────────────────────── */
+.stacked {
+  width: 360px;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 40px 44px;
+  gap: 0;
+}
+.stacked-enso { margin-bottom: 20px; }
+.stacked-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 64px;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  display: block;
+  white-space: nowrap;
+}
+.stacked-word em { font-style: italic; color: var(--terracotta); }
+.stacked-tagline {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  white-space: nowrap;
+}
+.stacked-desc {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  white-space: nowrap;
+}
+.dot-tc { display: inline-block; width: 3px; height: 3px; background: var(--terracotta); border-radius: 50%; flex-shrink: 0; }
+
+/* Colour variants */
+.bg-parchment { background: var(--parchment); }
+.bg-sand { background: var(--sand); }
+.bg-char { background: var(--char); }
+.on-dark { color: var(--parchment); }
+.on-light { color: var(--char); }
+.tag-light { color: var(--bronze); }
+.tag-dark { color: rgba(239,230,214,0.3); }
+.desc-light { color: var(--bronze); }
+.desc-dark { color: rgba(239,230,214,0.2); }
+
+/* ─────────────────────────────────────────────────
+   INLINE / HORIZONTAL VARIANTS
+   ───────────────────────────────────────────────── */
+.inline-board {
+  width: 360px;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 44px;
+  gap: 14px;
+}
+.inline-lock {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.inline-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 40px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.inline-word em { font-style: italic; color: var(--terracotta); }
+.inline-tagline {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────────
+   DESCRIPTOR COMPARISON STRIP
+   ───────────────────────────────────────────────── */
+.desc-strip {
+  background: var(--parchment);
+  padding: 40px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 900px;
+}
+.desc-row {
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(36,28,20,0.08);
+  display: grid;
+  grid-template-columns: 180px 1fr 200px;
+  align-items: center;
+  gap: 32px;
+}
+.desc-row:last-child { border-bottom: none; }
+.desc-row-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--char);
+  white-space: nowrap;
+}
+.desc-row-word em { font-style: italic; color: var(--terracotta); }
+.desc-row-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  white-space: nowrap;
+}
+.desc-row-opinion {
+  font-family: 'Spectral', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--bronze);
+  line-height: 1.5;
+  text-align: right;
+}
+.recommended {
+  background: rgba(185,83,44,0.04);
+}
+
+/* ─────────────────────────────────────────────────
+   SCALE STRIP
+   ───────────────────────────────────────────────── */
+.scale-strip {
+  background: var(--parchment);
+  padding: 32px 44px;
+  display: flex;
+  align-items: flex-end;
+  gap: 40px;
+  width: 100%;
+  max-width: 900px;
+}
+.scale-item { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.scale-label { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bronze); }
+.sep { width: 1px; background: rgba(36,28,20,0.1); align-self: stretch; }
+
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-title">Zizai — Logo Varianten</div>
+  <div class="page-hint">Cormorant Garamond 400 · Wayfinder palette · Alle richtingen</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTIE 1 — STACKED (favoriete richting)
+     ═══════════════════════════════════════════════ -->
+<div class="section-head">01 — Gestapeld — Enso boven, woordmerk breed (favoriete richting)</div>
+<div class="row">
+
+  <!-- E1: Parchment, geen punt, geen descriptor -->
+  <div class="ab">
+    <div class="ab-label">E1 — Parchment · Geen punt</div>
+    <div class="board stacked bg-parchment">
+      <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="stacked-enso">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+      <span class="stacked-word on-light">zizai</span>
+      <div class="stacked-tagline tag-light">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+  <!-- E2: Parchment, met terracotta italic punt -->
+  <div class="ab">
+    <div class="ab-label">E2 — Parchment · Italic terracotta punt</div>
+    <div class="board stacked bg-parchment">
+      <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="stacked-enso">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+      <span class="stacked-word on-light">zizai<em>.</em></span>
+      <div class="stacked-tagline tag-light">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+  <!-- E3: Char (dark), geen punt -->
+  <div class="ab">
+    <div class="ab-label">E3 — Donker · Geen punt</div>
+    <div class="board stacked bg-char">
+      <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="stacked-enso">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+      <span class="stacked-word on-dark">zizai</span>
+      <div class="stacked-tagline tag-dark">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+  <!-- E4: Char (dark), met punt -->
+  <div class="ab">
+    <div class="ab-label">E4 — Donker · Terracotta punt</div>
+    <div class="board stacked bg-char">
+      <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="stacked-enso">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+      <span class="stacked-word on-dark">zizai<em>.</em></span>
+      <div class="stacked-tagline tag-dark">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTIE 2 — INLINE / HORIZONTAAL
+     ═══════════════════════════════════════════════ -->
+<div class="section-head">02 — Inline — Enso naast woordmerk (nav, header, kleine formaten)</div>
+<div class="row">
+
+  <!-- A: italic punt, licht -->
+  <div class="ab">
+    <div class="ab-label">A — Italic punt · Licht</div>
+    <div class="board inline-board bg-parchment">
+      <div class="inline-lock">
+        <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+        <span class="inline-word on-light">zizai<em>.</em></span>
+      </div>
+      <div class="inline-tagline tag-light">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+  <!-- A2: italic punt, donker -->
+  <div class="ab">
+    <div class="ab-label">A2 — Italic punt · Donker</div>
+    <div class="board inline-board bg-char">
+      <div class="inline-lock">
+        <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+        <span class="inline-word on-dark">zizai<em>.</em></span>
+      </div>
+      <div class="inline-tagline tag-dark">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+  <!-- Geen enso, alleen wordmark -->
+  <div class="ab">
+    <div class="ab-label">Solo — Zonder enso</div>
+    <div class="board inline-board bg-parchment">
+      <span class="inline-word on-light" style="font-size:52px;">zizai<em>.</em></span>
+      <div class="inline-tagline tag-light">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+  <!-- Geen enso, geen punt -->
+  <div class="ab">
+    <div class="ab-label">Solo — Zonder enso, zonder punt</div>
+    <div class="board inline-board bg-sand">
+      <span class="inline-word on-light" style="font-size:52px;">zizai</span>
+      <div class="inline-tagline tag-light">Work less <span class="dot-tc"></span> Do more</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTIE 3 — DESCRIPTOR VERGELIJKING
+     ═══════════════════════════════════════════════ -->
+<div class="section-head">03 — Descriptor opties — In plaats van "AI automation studio"</div>
+<div class="desc-strip">
+  <div class="desc-row">
+    <div class="desc-row-word">zizai<em>.</em></div>
+    <div class="desc-row-tag">— Geen descriptor</div>
+    <div class="desc-row-opinion">Sterkste keuze. Het merk spreekt voor zich.</div>
+  </div>
+  <div class="desc-row recommended">
+    <div class="desc-row-word">zizai<em>.</em></div>
+    <div class="desc-row-tag">Automation atelier</div>
+    <div class="desc-row-opinion">Ambachtelijk, warm. Past bij Kyoto/Lissabon sfeer. ★</div>
+  </div>
+  <div class="desc-row">
+    <div class="desc-row-word">zizai<em>.</em></div>
+    <div class="desc-row-tag">Boutique automation</div>
+    <div class="desc-row-opinion">Premium, compact. Meer Engels.</div>
+  </div>
+  <div class="desc-row">
+    <div class="desc-row-word">zizai<em>.</em></div>
+    <div class="desc-row-tag">Workflow studio</div>
+    <div class="desc-row-opinion">Helder, begrijpelijk. Minder technisch.</div>
+  </div>
+  <div class="desc-row">
+    <div class="desc-row-word">zizai<em>.</em></div>
+    <div class="desc-row-tag">Quietly automates.</div>
+    <div class="desc-row-opinion">Aphoristisch. Past bij de toon. Ongewoon.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTIE 4 — SCHAALVERDELING
+     ═══════════════════════════════════════════════ -->
+<div class="section-head">04 — Schaalverdeling</div>
+<div class="scale-strip">
+  <div class="scale-item">
+    <div class="scale-label">Display</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:72px;letter-spacing:-0.03em;line-height:1;color:var(--char);white-space:nowrap;">zizai<span style="font-style:italic;color:var(--terracotta);">.</span></div>
+  </div>
+  <div class="sep"></div>
+  <div class="scale-item">
+    <div class="scale-label">48px</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:48px;letter-spacing:-0.03em;line-height:1;color:var(--char);white-space:nowrap;">zizai<span style="font-style:italic;color:var(--terracotta);">.</span></div>
+  </div>
+  <div class="sep"></div>
+  <div class="scale-item">
+    <div class="scale-label">28px</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:28px;letter-spacing:-0.025em;line-height:1;color:var(--char);white-space:nowrap;">zizai<span style="font-style:italic;color:var(--terracotta);">.</span></div>
+  </div>
+  <div class="sep"></div>
+  <div class="scale-item">
+    <div class="scale-label">20px</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:20px;letter-spacing:-0.02em;line-height:1;color:var(--char);white-space:nowrap;">zizai<span style="font-style:italic;color:var(--terracotta);">.</span></div>
+  </div>
+  <div class="sep"></div>
+  <div class="scale-item">
+    <div class="scale-label">Enso</div>
+    <div style="display:flex;align-items:flex-end;gap:12px;">
+      <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+      <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+      <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+    </div>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#161210"/>
+    <rect x="10" y="16" width="85" height="108" fill="#EFE6D6"/>
+    <rect x="105" y="16" width="85" height="108" fill="#241C14"/>
+    <path d="M 46,37 A 14,14 0 1 1 40,34" stroke="#B9532C" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <text x="18" y="88" font-family="serif" font-size="28" fill="#241C14" letter-spacing="-1">zizai</text>
+    <path d="M 141,37 A 14,14 0 1 1 135,34" stroke="#B9532C" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <text x="113" y="88" font-family="serif" font-size="28" fill="#EFE6D6" letter-spacing="-1">zizai</text>
+  </svg>
+</template>
+
+</body>
+</html>

@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Brand Kit · Automation Atelier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Spectral:ital,wght@0,200;0,300;0,400;1,200;1,300&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --parchment: #EFE6D6;
+  --sand: #E2D4BD;
+  --char: #241C14;
+  --terracotta: #B9532C;
+  --bronze: #7C6A4E;
+  --char-60: rgba(36,28,20,0.6);
+  --char-30: rgba(36,28,20,0.3);
+  --char-10: rgba(36,28,20,0.1);
+}
+
+body {
+  background: #1a1612;
+  color: var(--char);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Canvas shell ── */
+.canvas-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  height: 48px;
+  background: rgba(26,22,18,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 24px;
+}
+.canvas-header-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  color: var(--parchment);
+  letter-spacing: -0.01em;
+}
+.canvas-header-logo em { font-style: italic; color: var(--terracotta); }
+.canvas-header-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(239,230,214,0.35);
+}
+
+.canvas-scroll {
+  padding: 80px 60px 80px;
+  min-height: 100vh;
+}
+
+/* ── Section ── */
+.kit-section {
+  margin-bottom: 80px;
+}
+.kit-section-title {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(239,230,214,0.25);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.kit-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* ── Artboard ── */
+.artboard {
+  background: var(--parchment);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.artboard-label {
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(239,230,214,0.3);
+}
+
+/* ── LOGO artboards ── */
+.logo-light {
+  width: 400px;
+  height: 200px;
+  background: var(--parchment);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.logo-dark {
+  width: 400px;
+  height: 200px;
+  background: var(--char);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.logo-sand {
+  width: 400px;
+  height: 200px;
+  background: var(--sand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 48px;
+  letter-spacing: -0.03em;
+  color: var(--char);
+}
+.wordmark em { font-style: italic; color: var(--terracotta); }
+.wordmark-light { color: var(--parchment); }
+
+.wordmark-small {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--char);
+}
+.wordmark-small em { font-style: italic; color: var(--terracotta); }
+.wordmark-small.on-dark { color: var(--parchment); }
+
+.enso-mark {
+  display: block;
+}
+
+/* ── COLORS ── */
+.color-chip {
+  width: 140px;
+}
+.color-swatch {
+  width: 140px;
+  height: 96px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.color-info {
+  margin-top: 10px;
+}
+.color-name {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(239,230,214,0.6);
+}
+.color-hex {
+  font-size: 11px;
+  color: rgba(239,230,214,0.3);
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+.color-role {
+  font-size: 9px;
+  color: rgba(239,230,214,0.2);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ── TYPOGRAPHY ── */
+.type-specimen {
+  background: var(--parchment);
+  padding: 48px;
+  width: 640px;
+}
+.type-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--char-10);
+}
+.type-display-sample {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 52px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--char);
+  margin-bottom: 8px;
+}
+.type-display-sample em { font-style: italic; color: var(--terracotta); }
+.type-body-sample {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--bronze);
+  margin-top: 24px;
+  max-width: 440px;
+}
+.type-mono-sample {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-top: 24px;
+}
+.type-scale {
+  background: var(--parchment);
+  padding: 48px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.type-scale-row {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--char-10);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.type-scale-row:last-child { border-bottom: none; }
+.type-scale-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  flex-shrink: 0;
+}
+.type-scale-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--char-30);
+  text-align: right;
+}
+
+/* ── BUSINESS CARD WITH QR ── */
+.card-qr-front {
+  width: 340px;
+  height: 192px;
+  background: var(--parchment);
+  padding: 28px 32px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: 1fr auto;
+  gap: 0;
+  border: 1px solid var(--sand);
+}
+.card-qr-info { grid-column: 1; grid-row: 1; }
+.card-qr-code { grid-column: 2; grid-row: 1 / 3; display: flex; align-items: flex-end; }
+.card-qr-footer { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; justify-content: flex-end; }
+.card-qr-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--char);
+}
+.card-qr-role {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-top: 4px;
+}
+.card-qr-contact {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  color: var(--bronze);
+  line-height: 1.9;
+}
+.card-qr-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  color: var(--char);
+}
+.card-qr-wordmark em { font-style: italic; color: var(--terracotta); }
+
+/* QR label */
+.qr-note {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--char-30);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.card-front {
+  width: 340px;
+  height: 192px;
+  background: var(--parchment);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--sand);
+}
+.card-back {
+  width: 340px;
+  height: 192px;
+  background: var(--char);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--char);
+}
+.card-role {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-top: 4px;
+}
+.card-contact {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--bronze);
+  line-height: 1.8;
+}
+.card-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--parchment);
+}
+.card-logo-text em { font-style: italic; color: var(--terracotta); }
+.card-back-tagline {
+  font-family: 'Spectral', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 13px;
+  color: rgba(239,230,214,0.45);
+  letter-spacing: 0.01em;
+}
+.card-back-enso {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  opacity: 0.15;
+}
+
+/* ── EMAIL SIGNATURE ── */
+.email-sig {
+  width: 540px;
+  background: #ffffff;
+  padding: 28px 32px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.sig-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--char);
+  margin-bottom: 2px;
+}
+.sig-role {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 16px;
+}
+.sig-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--terracotta);
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+.sig-info {
+  font-size: 10px;
+  color: var(--bronze);
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+.sig-info a { color: var(--terracotta); text-decoration: none; }
+.sig-brand {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(36,28,20,0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sig-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--char);
+}
+.sig-wordmark em { font-style: italic; color: var(--terracotta); }
+.sig-tagline {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--char-30);
+}
+
+/* ── SOCIAL BANNER ── */
+.social-banner {
+  width: 820px;
+  height: 215px;
+  background: var(--char);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 60px;
+  gap: 60px;
+}
+.banner-lines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+}
+.banner-left {
+  flex-shrink: 0;
+}
+.banner-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 48px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--parchment);
+}
+.banner-title em { font-style: italic; color: var(--terracotta); }
+.banner-right {
+  border-left: 1px solid rgba(239,230,214,0.1);
+  padding-left: 60px;
+}
+.banner-tagline {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 18px;
+  color: rgba(239,230,214,0.5);
+  margin-bottom: 16px;
+}
+.banner-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+}
+
+/* ── TONE CARD ── */
+.tone-card {
+  background: var(--sand);
+  padding: 40px;
+  width: 460px;
+}
+.tone-row {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--char-10);
+}
+.tone-row:first-child { padding-top: 0; }
+.tone-row:last-child { border-bottom: none; padding-bottom: 0; }
+.tone-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 8px;
+}
+.tone-text {
+  font-family: 'Spectral', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 16px;
+  color: var(--char);
+  line-height: 1.5;
+}
+.tone-avoid {
+  background: var(--parchment);
+  padding: 40px;
+  width: 300px;
+}
+.avoid-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--char-10);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--bronze);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.avoid-item:last-child { border-bottom: none; }
+.avoid-x {
+  color: var(--terracotta);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="canvas-header">
+  <span class="canvas-header-logo">zizai<em>.</em></span>
+  <span class="canvas-header-label">Brand Kit — Direction C: Wayfinder</span>
+</div>
+
+<div class="canvas-scroll">
+
+  <!-- ── LOGO ── -->
+  <div class="kit-section">
+    <div class="kit-section-title">01 — Logo &amp; Woordmerk</div>
+    <div class="kit-row">
+
+      <div style="position:relative; margin-bottom: 32px;">
+        <div class="logo-light artboard">
+          <span class="wordmark">zizai<em>.</em></span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--bronze);">Work less · Do more</span>
+        </div>
+        <div class="artboard-label">Primair — op Parchment</div>
+      </div>
+
+      <div style="position:relative; margin-bottom: 32px;">
+        <div class="logo-dark artboard">
+          <span class="wordmark wordmark-light">zizai<em>.</em></span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:rgba(239,230,214,0.35);">Work less · Do more</span>
+        </div>
+        <div class="artboard-label">Omgekeerd — op Char</div>
+      </div>
+
+      <div style="position:relative; margin-bottom: 32px;">
+        <div class="logo-sand artboard" style="width:200px; height:200px;">
+          <svg width="80" height="80" viewBox="0 0 100 100" fill="none" class="enso-mark">
+            <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+          </svg>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--bronze); margin-top:4px;">Enso Mark</span>
+        </div>
+        <div class="artboard-label">Standalone icon</div>
+      </div>
+
+      <!-- ── Stacked E1 (shown when lockup = gestapeld) ── -->
+      <div id="bk-logo-stacked" style="position:relative; margin-bottom: 32px; display:none;">
+        <div class="logo-light artboard" style="width:280px;height:280px;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+          <svg width="72" height="72" viewBox="0 0 100 100" fill="none" id="bk-enso-stacked">
+            <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+          </svg>
+          <span class="wordmark" id="bk-stacked-word">zizai</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--bronze);">Work less · Do more</span>
+        </div>
+        <div class="artboard-label">Gestapeld — E1</div>
+      </div>
+
+      <!-- ── Inline horizontal (shown when lockup = horizontaal) ── -->
+      <div id="bk-logo-inline" style="position:relative; margin-bottom: 32px; display:none;">
+        <div class="logo-light artboard" style="width:440px;height:200px;flex-direction:row;gap:20px;">
+          <svg width="52" height="52" viewBox="0 0 100 100" fill="none">
+            <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+          </svg>
+          <span class="wordmark" style="font-size:56px;" id="bk-inline-word">zizai</span>
+        </div>
+        <div class="artboard-label">Horizontaal — Inline</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="kit-section">
+    <div class="kit-section-title">02 — Kleurenpalet — Wayfinder</div>
+    <div class="kit-row">
+
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#EFE6D6;"></div>
+        <div class="color-info">
+          <div class="color-name">Parchment</div>
+          <div class="color-hex">#EFE6D6</div>
+          <div class="color-role">Primaire achtergrond</div>
+        </div>
+      </div>
+
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#E2D4BD;"></div>
+        <div class="color-info">
+          <div class="color-name">Sand</div>
+          <div class="color-hex">#E2D4BD</div>
+          <div class="color-role">Secundaire achtergrond</div>
+        </div>
+      </div>
+
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#241C14;"></div>
+        <div class="color-info">
+          <div class="color-name">Char</div>
+          <div class="color-hex">#241C14</div>
+          <div class="color-role">Primaire tekst</div>
+        </div>
+      </div>
+
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#B9532C;"></div>
+        <div class="color-info">
+          <div class="color-name">Terracotta</div>
+          <div class="color-hex">#B9532C</div>
+          <div class="color-role">Accent, period, enso</div>
+        </div>
+      </div>
+
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#7C6A4E;"></div>
+        <div class="color-info">
+          <div class="color-name">Bronze</div>
+          <div class="color-hex">#7C6A4E</div>
+          <div class="color-role">Ondersteunend, labels</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TYPOGRAPHY ── -->
+  <div class="kit-section">
+    <div class="kit-section-title">03 — Typografie</div>
+    <div class="kit-row">
+
+      <div class="type-specimen artboard">
+        <div class="type-meta">Cormorant Garamond 400 — Display</div>
+        <div class="type-display-sample">Work less.<br>Do <em>more.</em></div>
+        <div class="type-body-sample">Wij bouwen systemen die het werk doen dat jij niet hoeft te doen. Repetitief, klikken, kopiëren, invoeren — dat verdwijnt.</div>
+        <div class="type-mono-sample">Work less · Do more — Amsterdam</div>
+      </div>
+
+      <div class="type-scale artboard">
+        <div class="type-meta">Schaalverdeling</div>
+        <div class="type-scale-row">
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif; font-size:40px; font-weight:400; letter-spacing:-0.02em; color:var(--char); line-height:1;">zizai<span style="font-style:italic;color:var(--terracotta)">.</span></div>
+          </div>
+          <div class="type-scale-label">96px · Display</div>
+        </div>
+        <div class="type-scale-row">
+          <div style="font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:400; color:var(--char);">Heading</div>
+          <div class="type-scale-label">40px · Heading</div>
+        </div>
+        <div class="type-scale-row">
+          <div style="font-family:'Spectral',serif; font-weight:300; font-size:16px; color:var(--char);">Body copy</div>
+          <div class="type-scale-label">17px · Body</div>
+        </div>
+        <div class="type-scale-row">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--bronze);">Label / UI</div>
+          <div class="type-scale-label">10–11px · Mono</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── BUSINESS CARD ── -->
+  <div class="kit-section">
+    <div class="kit-section-title">04 — Visitekaartje (met QR)</div>
+    <div class="kit-row">
+
+      <!-- Mark voorzijde -->
+      <div style="position:relative; margin-bottom:40px;">
+        <div class="card-qr-front artboard">
+          <div class="card-qr-info">
+            <div class="card-qr-name">Mark</div>
+            <div class="card-qr-role">Co-founder · Zizai</div>
+          </div>
+          <div class="card-qr-code">
+            <div>
+              <svg width="56" height="56" viewBox="0 0 21 21" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+                <!-- Finder TL -->
+                <rect x="0" y="0" width="7" height="7" fill="#241C14"/>
+                <rect x="1" y="1" width="5" height="5" fill="#EFE6D6"/>
+                <rect x="2" y="2" width="3" height="3" fill="#241C14"/>
+                <!-- Finder TR -->
+                <rect x="14" y="0" width="7" height="7" fill="#241C14"/>
+                <rect x="15" y="1" width="5" height="5" fill="#EFE6D6"/>
+                <rect x="16" y="2" width="3" height="3" fill="#241C14"/>
+                <!-- Finder BL -->
+                <rect x="0" y="14" width="7" height="7" fill="#241C14"/>
+                <rect x="1" y="15" width="5" height="5" fill="#EFE6D6"/>
+                <rect x="2" y="16" width="3" height="3" fill="#241C14"/>
+                <!-- Timing patterns -->
+                <rect x="8" y="6" width="1" height="1" fill="#241C14"/>
+                <rect x="10" y="6" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="6" width="1" height="1" fill="#241C14"/>
+                <rect x="6" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="6" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="6" y="12" width="1" height="1" fill="#241C14"/>
+                <!-- Data modules -->
+                <rect x="8" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="11" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="13" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="15" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="17" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="19" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="10" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="14" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="16" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="18" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="10" width="2" height="1" fill="#241C14"/>
+                <rect x="12" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="15" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="17" y="10" width="2" height="1" fill="#241C14"/>
+                <rect x="20" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="11" width="1" height="1" fill="#241C14"/>
+                <rect x="11" y="11" width="2" height="1" fill="#241C14"/>
+                <rect x="14" y="11" width="1" height="1" fill="#241C14"/>
+                <rect x="16" y="11" width="1" height="1" fill="#241C14"/>
+                <rect x="19" y="11" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="12" width="1" height="1" fill="#241C14"/>
+                <rect x="13" y="12" width="2" height="1" fill="#241C14"/>
+                <rect x="17" y="12" width="1" height="1" fill="#241C14"/>
+                <rect x="20" y="12" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="13" width="2" height="1" fill="#241C14"/>
+                <rect x="12" y="13" width="1" height="1" fill="#241C14"/>
+                <rect x="15" y="13" width="2" height="1" fill="#241C14"/>
+                <rect x="18" y="13" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="14" width="1" height="1" fill="#241C14"/>
+                <rect x="11" y="14" width="1" height="1" fill="#241C14"/>
+                <rect x="14" y="14" width="1" height="1" fill="#241C14"/>
+                <rect x="16" y="14" width="2" height="1" fill="#241C14"/>
+                <rect x="19" y="14" width="2" height="1" fill="#241C14"/>
+                <rect x="9" y="15" width="2" height="1" fill="#241C14"/>
+                <rect x="13" y="15" width="1" height="1" fill="#241C14"/>
+                <rect x="15" y="15" width="1" height="1" fill="#241C14"/>
+                <rect x="18" y="15" width="1" height="1" fill="#241C14"/>
+                <rect x="20" y="15" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="16" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="16" width="2" height="1" fill="#241C14"/>
+                <rect x="16" y="16" width="1" height="1" fill="#241C14"/>
+                <rect x="19" y="16" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="17" width="3" height="1" fill="#241C14"/>
+                <rect x="13" y="17" width="1" height="1" fill="#241C14"/>
+                <rect x="15" y="17" width="3" height="1" fill="#241C14"/>
+                <rect x="20" y="17" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="18" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="18" width="1" height="1" fill="#241C14"/>
+                <rect x="14" y="18" width="2" height="1" fill="#241C14"/>
+                <rect x="17" y="18" width="2" height="1" fill="#241C14"/>
+                <rect x="8" y="19" width="2" height="1" fill="#241C14"/>
+                <rect x="11" y="19" width="2" height="1" fill="#241C14"/>
+                <rect x="16" y="19" width="1" height="1" fill="#241C14"/>
+                <rect x="18" y="19" width="1" height="1" fill="#241C14"/>
+                <rect x="20" y="19" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="20" width="1" height="1" fill="#241C14"/>
+                <rect x="13" y="20" width="3" height="1" fill="#241C14"/>
+                <rect x="17" y="20" width="3" height="1" fill="#241C14"/>
+              </svg>
+              <div class="qr-note">zizai.nl</div>
+            </div>
+          </div>
+          <div class="card-qr-footer">
+            <div class="card-qr-contact">
+              <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b5d8d4c7def5cfdccfd4dc9bdbd9">[email&#160;protected]</a><br>
+              zizai.nl
+            </div>
+          </div>
+        </div>
+        <div class="artboard-label">Mark — Voorzijde</div>
+      </div>
+
+      <!-- Achterzijde (gedeeld) -->
+      <div style="position:relative; margin-bottom:40px;">
+        <div class="card-back artboard" style="position:relative;">
+          <div class="card-logo-area">
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+            <span class="card-logo-text">zizai<em>.</em></span>
+          </div>
+          <div class="card-back-tagline">Work less. Do more.</div>
+          <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="card-back-enso" opacity="0.25">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#EFE6D6" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#EFE6D6" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+        </div>
+        <div class="artboard-label">Achterzijde (Mark &amp; Sheryla)</div>
+      </div>
+
+      <!-- Sheryla voorzijde -->
+      <div style="position:relative; margin-bottom:40px;">
+        <div class="card-qr-front artboard">
+          <div class="card-qr-info">
+            <div class="card-qr-name">Sheryla</div>
+            <div class="card-qr-role">Co-founder · Zizai</div>
+          </div>
+          <div class="card-qr-code">
+            <div>
+              <svg width="56" height="56" viewBox="0 0 21 21" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="0" width="7" height="7" fill="#241C14"/>
+                <rect x="1" y="1" width="5" height="5" fill="#EFE6D6"/>
+                <rect x="2" y="2" width="3" height="3" fill="#241C14"/>
+                <rect x="14" y="0" width="7" height="7" fill="#241C14"/>
+                <rect x="15" y="1" width="5" height="5" fill="#EFE6D6"/>
+                <rect x="16" y="2" width="3" height="3" fill="#241C14"/>
+                <rect x="0" y="14" width="7" height="7" fill="#241C14"/>
+                <rect x="1" y="15" width="5" height="5" fill="#EFE6D6"/>
+                <rect x="2" y="16" width="3" height="3" fill="#241C14"/>
+                <rect x="8" y="6" width="1" height="1" fill="#241C14"/>
+                <rect x="10" y="6" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="6" width="1" height="1" fill="#241C14"/>
+                <rect x="6" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="6" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="6" y="12" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="8" width="2" height="1" fill="#241C14"/>
+                <rect x="13" y="8" width="1" height="1" fill="#241C14"/>
+                <rect x="16" y="8" width="2" height="1" fill="#241C14"/>
+                <rect x="19" y="8" width="2" height="1" fill="#241C14"/>
+                <rect x="8" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="11" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="15" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="17" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="20" y="9" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="10" width="2" height="1" fill="#241C14"/>
+                <rect x="16" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="18" y="10" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="11" width="2" height="1" fill="#241C14"/>
+                <rect x="12" y="11" width="1" height="1" fill="#241C14"/>
+                <rect x="14" y="11" width="2" height="1" fill="#241C14"/>
+                <rect x="17" y="11" width="3" height="1" fill="#241C14"/>
+                <rect x="10" y="12" width="1" height="1" fill="#241C14"/>
+                <rect x="13" y="12" width="1" height="1" fill="#241C14"/>
+                <rect x="16" y="12" width="1" height="1" fill="#241C14"/>
+                <rect x="19" y="12" width="2" height="1" fill="#241C14"/>
+                <rect x="8" y="13" width="1" height="1" fill="#241C14"/>
+                <rect x="11" y="13" width="2" height="1" fill="#241C14"/>
+                <rect x="15" y="13" width="1" height="1" fill="#241C14"/>
+                <rect x="17" y="13" width="2" height="1" fill="#241C14"/>
+                <rect x="9" y="14" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="14" width="1" height="1" fill="#241C14"/>
+                <rect x="14" y="14" width="1" height="1" fill="#241C14"/>
+                <rect x="16" y="14" width="3" height="1" fill="#241C14"/>
+                <rect x="20" y="14" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="15" width="2" height="1" fill="#241C14"/>
+                <rect x="13" y="15" width="2" height="1" fill="#241C14"/>
+                <rect x="17" y="15" width="1" height="1" fill="#241C14"/>
+                <rect x="19" y="15" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="16" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="16" width="1" height="1" fill="#241C14"/>
+                <rect x="15" y="16" width="2" height="1" fill="#241C14"/>
+                <rect x="18" y="16" width="2" height="1" fill="#241C14"/>
+                <rect x="8" y="17" width="1" height="1" fill="#241C14"/>
+                <rect x="11" y="17" width="3" height="1" fill="#241C14"/>
+                <rect x="16" y="17" width="1" height="1" fill="#241C14"/>
+                <rect x="19" y="17" width="2" height="1" fill="#241C14"/>
+                <rect x="10" y="18" width="2" height="1" fill="#241C14"/>
+                <rect x="14" y="18" width="1" height="1" fill="#241C14"/>
+                <rect x="17" y="18" width="1" height="1" fill="#241C14"/>
+                <rect x="20" y="18" width="1" height="1" fill="#241C14"/>
+                <rect x="8" y="19" width="1" height="1" fill="#241C14"/>
+                <rect x="12" y="19" width="2" height="1" fill="#241C14"/>
+                <rect x="15" y="19" width="1" height="1" fill="#241C14"/>
+                <rect x="18" y="19" width="1" height="1" fill="#241C14"/>
+                <rect x="9" y="20" width="2" height="1" fill="#241C14"/>
+                <rect x="13" y="20" width="2" height="1" fill="#241C14"/>
+                <rect x="16" y="20" width="2" height="1" fill="#241C14"/>
+                <rect x="19" y="20" width="2" height="1" fill="#241C14"/>
+              </svg>
+              <div class="qr-note">zizai.nl</div>
+            </div>
+          </div>
+          <div class="card-qr-footer">
+            <div class="card-qr-contact">
+              <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a4d7ccc1d6ddc8c5e4decddec5cd8acac8">[email&#160;protected]</a><br>
+              zizai.nl
+            </div>
+          </div>
+        </div>
+        <div class="artboard-label">Sheryla — Voorzijde</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── EMAIL SIGNATURE ── -->
+  <div class="kit-section">
+    <div class="kit-section-title">05 — E-mailhandtekening</div>
+    <div class="kit-row">
+
+      <div style="position:relative; margin-bottom:32px;">
+        <div class="email-sig artboard">
+          <div class="sig-name">Mark</div>
+          <div class="sig-role">Co-founder · Zizai</div>
+          <div class="sig-divider"></div>
+          <div class="sig-info">
+            <a href="/cdn-cgi/l/email-protection#cfa2aebda48fb5a6b5aea6e1a1a3"><span class="__cf_email__" data-cfemail="a5c8c4d7cee5dfccdfc4cc8bcbc9">[email&#160;protected]</span></a><br>
+            <a href="https://zizai.nl">zizai.nl</a>
+          </div>
+          <div class="sig-brand">
+            <span class="sig-wordmark">zizai<em>.</em></span>
+            <span class="sig-tagline">Work less. Do more.</span>
+          </div>
+        </div>
+        <div class="artboard-label">E-mailhandtekening — Mark</div>
+      </div>
+
+      <div style="position:relative; margin-bottom:32px;">
+        <div class="email-sig artboard">
+          <div class="sig-name">Sheryla</div>
+          <div class="sig-role">Co-founder · Zizai</div>
+          <div class="sig-divider"></div>
+          <div class="sig-info">
+            <a href="/cdn-cgi/l/email-protection#74071c11060d1815340e1d0e151d5a1a18"><span class="__cf_email__" data-cfemail="8bf8e3eef9f2e7eacbf1e2f1eae2a5e5e7">[email&#160;protected]</span></a><br>
+            <a href="https://zizai.nl">zizai.nl</a>
+          </div>
+          <div class="sig-brand">
+            <span class="sig-wordmark">zizai<em>.</em></span>
+            <span class="sig-tagline">Work less. Do more.</span>
+          </div>
+        </div>
+        <div class="artboard-label">E-mailhandtekening — Sheryla</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SOCIAL BANNER ── -->
+  <div class="kit-section">
+    <div class="kit-section-title">06 — LinkedIn Banner (1584 × 396px)</div>
+    <div class="kit-row">
+
+      <div style="position:relative; margin-bottom:32px;">
+        <div class="social-banner artboard">
+          <!-- Subtle grid texture -->
+          <svg class="banner-lines" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#EFE6D6" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)"/>
+          </svg>
+
+          <div class="banner-left">
+            <svg width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:16px;">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+            <div class="banner-title">zizai<em>.</em></div>
+          </div>
+
+          <div class="banner-right">
+            <div class="banner-tagline">Work less. Do more.</div>
+            <div class="banner-label">Work less · Do more — Amsterdam</div>
+          </div>
+        </div>
+        <div class="artboard-label" style="color:rgba(239,230,214,0.3);">LinkedIn banner (schaal 1:2)</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TONE OF VOICE ── -->
+  <div class="kit-section">
+    <div class="kit-section-title">07 — Tone of Voice</div>
+    <div class="kit-row">
+
+      <div class="tone-card artboard">
+        <div class="type-meta">Voorbeeldzinnen — Do</div>
+        <div class="tone-row">
+          <div class="tone-label">Resultaat</div>
+          <div class="tone-text">"The reconciliation finished overnight. Take the morning."</div>
+        </div>
+        <div class="tone-row">
+          <div class="tone-label">Status</div>
+          <div class="tone-text">"Quietly running. Nothing to look at."</div>
+        </div>
+        <div class="tone-row">
+          <div class="tone-label">Herkomst</div>
+          <div class="tone-text">"Built by two people who got tired of clicking."</div>
+        </div>
+        <div class="tone-row">
+          <div class="tone-label">Waarde</div>
+          <div class="tone-text">"Hoeveel uur verlies jij aan werk dat niet jouw werk is?"</div>
+        </div>
+      </div>
+
+      <div class="tone-avoid artboard">
+        <div class="type-meta">Vermijd</div>
+        <div class="avoid-item"><span class="avoid-x">×</span> "Supercharge your workflow"</div>
+        <div class="avoid-item"><span class="avoid-x">×</span> "10× productivity"</div>
+        <div class="avoid-item"><span class="avoid-x">×</span> "Revolutionary AI"</div>
+        <div class="avoid-item"><span class="avoid-x">×</span> "Synergy"</div>
+        <div class="avoid-item"><span class="avoid-x">×</span> Emojis als punctuatie</div>
+        <div class="avoid-item"><span class="avoid-x">×</span> "Leverage", "Unlock"</div>
+        <div class="avoid-item"><span class="avoid-x">×</span> Vage superlatieven</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ═══════════════════════════════════════════════════════
+//  ZIZAI BRAND KIT — TWEAKS
+//  Three expressive controls that reshape the feel
+// ═══════════════════════════════════════════════════════
+
+const BK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "sfeer": "nacht",
+  "lockup": "gestapeld",
+  "type": "serif"
+}/*EDITMODE-END*/;
+
+let bkState = {...BK_DEFAULTS};
+
+// ── CSS vars per sfeer ──────────────────────────────────
+const SFEER = {
+  dag: {
+    artBg: '#EFE6D6', artBg2: '#E2D4BD', artText: '#241C14',
+    artTextMuted: '#7C6A4E', artTextLight: 'rgba(239,230,214,0.35)',
+    darkBg: '#241C14', darkText: '#EFE6D6'
+  },
+  nacht: {
+    artBg: '#241C14', artBg2: '#1a1612', artText: '#EFE6D6',
+    artTextMuted: 'rgba(239,230,214,0.4)', artTextLight: 'rgba(239,230,214,0.35)',
+    darkBg: '#EFE6D6', darkText: '#241C14'
+  },
+  terracotta: {
+    artBg: '#B9532C', artBg2: '#a44826', artText: '#EFE6D6',
+    artTextMuted: 'rgba(239,230,214,0.55)', artTextLight: 'rgba(239,230,214,0.4)',
+    darkBg: '#EFE6D6', darkText: '#B9532C'
+  }
+};
+
+// ── Apply state ─────────────────────────────────────────
+function applyState() {
+  const root = document.documentElement;
+  const s = SFEER[bkState.sfeer];
+
+  // Sfeer: override artboard backgrounds via CSS vars
+  root.style.setProperty('--parchment', s.artBg);
+  root.style.setProperty('--sand', s.artBg2);
+  root.style.setProperty('--char', s.artText);
+  root.style.setProperty('--bronze', s.artTextMuted);
+
+  // Update wordmarks that change with sfeer
+  document.querySelectorAll('.wordmark').forEach(el => {
+    el.style.color = s.artText;
+    const em = el.querySelector('em');
+    if (em) em.style.color = '#B9532C';
+  });
+  document.querySelectorAll('.wordmark-light').forEach(el => {
+    el.style.color = s.darkText;
+  });
+
+  // Lockup: show/hide logo artboard variants
+  const showStacked   = bkState.lockup === 'gestapeld';
+  const showInline    = bkState.lockup === 'horizontaal';
+  const showDefault   = bkState.lockup === 'woordmerk';
+
+  document.getElementById('bk-logo-stacked').style.display = showStacked   ? 'block' : 'none';
+  document.getElementById('bk-logo-inline').style.display  = showInline    ? 'block' : 'none';
+
+  // For woordmerk: hide enso in the default artboards; for others: keep
+  const logoLight = document.querySelector('.logo-light');
+  const logoSand  = document.querySelector('.logo-sand');
+  if (logoLight) logoLight.style.display = showInline ? 'none' : 'flex';
+  if (logoSand)  logoSand.parentElement.style.display = showStacked ? 'none' : 'block';
+
+  // Type: swap display font-family for wordmarks
+  const displayFont = bkState.type === 'mono'
+    ? "'IBM Plex Mono', monospace"
+    : "'Cormorant Garamond', serif";
+  document.querySelectorAll('.wordmark, .type-display-sample, .about-title').forEach(el => {
+    el.style.fontFamily = displayFont;
+    el.style.letterSpacing = bkState.type === 'mono' ? '0.02em' : '-0.03em';
+  });
+
+  // Persist via host
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: bkState }, '*');
+}
+
+// ── Build panel ─────────────────────────────────────────
+const panelStyle = `
+  .bk-panel{position:fixed;right:16px;bottom:16px;z-index:9999;width:268px;
+    display:none;flex-direction:column;
+    background:rgba(250,249,247,.88);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.2);
+    font:11.5px/1.4 ui-sans-serif,system-ui,sans-serif;color:#29261b;overflow:hidden;}
+  .bk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none;border-bottom:.5px solid rgba(0,0,0,.08);}
+  .bk-hd b{font-size:12px;font-weight:600;}
+  .bk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.5);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;}
+  .bk-x:hover{background:rgba(0,0,0,.07);color:#29261b;}
+  .bk-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:14px;}
+  .bk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.4);margin-top:4px;}
+  .bk-seg{display:flex;padding:2px;border-radius:8px;background:rgba(0,0,0,.06);}
+  .bk-seg-btn{flex:1;appearance:none;border:0;background:transparent;
+    font:inherit;font-weight:500;min-height:24px;border-radius:6px;cursor:default;
+    padding:3px 4px;color:rgba(41,38,27,.7);transition:background .1s;}
+  .bk-seg-btn.on{background:rgba(255,255,255,.9);color:#29261b;
+    box-shadow:0 1px 2px rgba(0,0,0,.12);}
+`;
+const styleEl = document.createElement('style');
+styleEl.textContent = panelStyle;
+document.head.appendChild(styleEl);
+
+const panel = document.createElement('div');
+panel.className = 'bk-panel';
+panel.innerHTML = `
+  <div class="bk-hd" id="bk-drag-handle">
+    <b>Tweaks</b>
+    <button class="bk-x" id="bk-close">✕</button>
+  </div>
+  <div class="bk-body">
+    <div class="bk-sect">Sfeer</div>
+    <div class="bk-seg" id="bk-sfeer">
+      <button class="bk-seg-btn on" data-val="dag">Dag</button>
+      <button class="bk-seg-btn" data-val="nacht">Nacht</button>
+      <button class="bk-seg-btn" data-val="terracotta">Terracotta</button>
+    </div>
+    <div class="bk-sect">Logo lockup</div>
+    <div class="bk-seg" id="bk-lockup">
+      <button class="bk-seg-btn on" data-val="gestapeld">Gestapeld</button>
+      <button class="bk-seg-btn" data-val="horizontaal">Horizontaal</button>
+      <button class="bk-seg-btn" data-val="woordmerk">Woordmerk</button>
+    </div>
+    <div class="bk-sect">Typografie</div>
+    <div class="bk-seg" id="bk-type">
+      <button class="bk-seg-btn on" data-val="serif">Serif</button>
+      <button class="bk-seg-btn" data-val="mono">Mono</button>
+    </div>
+  </div>
+`;
+document.body.appendChild(panel);
+
+// Drag
+let dragging = false, ox = 0, oy = 0;
+document.getElementById('bk-drag-handle').addEventListener('mousedown', e => {
+  dragging = true;
+  const r = panel.getBoundingClientRect();
+  ox = e.clientX - (window.innerWidth - r.right);
+  oy = e.clientY - (window.innerHeight - r.bottom);
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  panel.style.right = Math.max(8, window.innerWidth - e.clientX - ox) + 'px';
+  panel.style.bottom = Math.max(8, window.innerHeight - e.clientY - oy) + 'px';
+});
+window.addEventListener('mouseup', () => { dragging = false; });
+
+// Close
+document.getElementById('bk-close').addEventListener('click', () => {
+  panel.style.display = 'none';
+  window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+});
+
+// Seg controls
+function makeSeg(id, key) {
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('.bk-seg-btn');
+    if (!btn) return;
+    document.querySelectorAll(`#${id} .bk-seg-btn`).forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    bkState[key] = btn.dataset.val;
+    applyState();
+  });
+}
+makeSeg('bk-sfeer', 'sfeer');
+makeSeg('bk-lockup', 'lockup');
+makeSeg('bk-type', 'type');
+
+// Host protocol
+window.addEventListener('message', e => {
+  if (e.data?.type === '__activate_edit_mode') { panel.style.display = 'flex'; }
+  if (e.data?.type === '__deactivate_edit_mode') { panel.style.display = 'none'; }
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+// Init
+applyState();
+</script>
+  <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#1a1612"/>
+    <rect x="20" y="20" width="80" height="50" fill="#EFE6D6"/>
+    <rect x="110" y="20" width="70" height="50" fill="#241C14"/>
+    <text x="34" y="53" font-family="serif" font-size="22" fill="#241C14">zizai<tspan fill="#B9532C" font-style="italic">.</tspan></text>
+    <text x="122" y="53" font-family="serif" font-size="22" fill="#EFE6D6">zizai<tspan fill="#B9532C" font-style="italic">.</tspan></text>
+    <rect x="20" y="82" width="25" height="25" fill="#EFE6D6"/>
+    <rect x="51" y="82" width="25" height="25" fill="#E2D4BD"/>
+    <rect x="82" y="82" width="25" height="25" fill="#241C14"/>
+    <rect x="113" y="82" width="25" height="25" fill="#B9532C"/>
+    <rect x="144" y="82" width="25" height="25" fill="#7C6A4E"/>
+  </svg>
+</template>
+
+</body>
+</html>

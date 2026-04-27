@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Brand Guidelines v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Spectral:ital,wght@0,200;0,300;0,400;1,200;1,300&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script>
+/**
+ * <deck-stage> — reusable web component for HTML decks.
+ *
+ * Handles:
+ *  (a) speaker notes — reads <script type="application/json" id="speaker-notes">
+ *      and posts {slideIndexChanged: N} to the parent window on nav.
+ *  (b) keyboard navigation — ←/→, PgUp/PgDn, Space, Home/End, number keys.
+ *  (c) press R to reset to slide 0 (with a tasteful keyboard hint).
+ *  (d) bottom-center overlay showing slide count + hints, fades out on idle.
+ *  (e) auto-scaling — inner canvas is a fixed design size (default 1920×1080)
+ *      scaled with `transform: scale()` to fit the viewport, letterboxed.
+ *      Set the `noscale` attribute to render at authored size (1:1) — the
+ *      PPTX exporter sets this so its DOM capture sees unscaled geometry.
+ *  (f) print — `@media print` lays every slide out as its own page at the
+ *      design size, so the browser's Print → Save as PDF produces a clean
+ *      one-page-per-slide PDF with no extra setup.
+ *
+ * Slides are HIDDEN, not unmounted. Non-active slides stay in the DOM with
+ * `visibility: hidden` + `opacity: 0`, so their state (videos, iframes,
+ * form inputs, React trees) is preserved across navigation.
+ *
+ * Lifecycle event — the component dispatches a `slidechange` CustomEvent on
+ * itself whenever the active slide changes (including the initial mount).
+ * The event bubbles and composes out of shadow DOM, so you can listen on
+ * the <deck-stage> element or on document:
+ *
+ *   document.querySelector('deck-stage').addEventListener('slidechange', (e) => {
+ *     e.detail.index         // new 0-based index
+ *     e.detail.previousIndex // previous index, or -1 on init
+ *     e.detail.total         // total slide count
+ *     e.detail.slide         // the new active slide element
+ *     e.detail.previousSlide // the prior slide element, or null on init
+ *     e.detail.reason        // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+ *   });
+ *
+ * Persistence: none at the deck level. The host app keeps the current slide
+ * in its own URL (?slide=) and re-delivers it via location.hash on load, so a
+ * bare load with no hash always starts at slide 1.
+ *
+ * Usage:
+ *   <deck-stage width="1920" height="1080">
+ *     <section data-label="Title">...</section>
+ *     <section data-label="Agenda">...</section>
+ *   </deck-stage>
+ *
+ * Slides are the direct element children of <deck-stage>. Each slide is
+ * automatically tagged with:
+ *   - data-screen-label="NN Label"   (1-indexed, for comment flow)
+ *   - data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text"
+ */
+
+(() => {
+  const DESIGN_W_DEFAULT = 1920;
+  const DESIGN_H_DEFAULT = 1080;
+  const OVERLAY_HIDE_MS = 1800;
+  const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const stylesheet = `
+    :host {
+      position: fixed;
+      inset: 0;
+      display: block;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canvas {
+      position: relative;
+      transform-origin: center center;
+      flex-shrink: 0;
+      background: #fff;
+      will-change: transform;
+    }
+
+    /* Slides live in light DOM (via <slot>) so authored CSS still applies.
+       We absolutely position each slotted child to stack them. */
+    ::slotted(*) {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+    ::slotted([data-deck-active]) {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    /* Tap zones for mobile — back/forward thirds like Stories.
+       Transparent, no visible UI, don't block the overlay. */
+    .tapzones {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      z-index: 2147482000;
+      pointer-events: none;
+    }
+    .tapzone {
+      flex: 1;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Only activate tap zones on coarse pointers (touch devices). */
+    @media (hover: hover) and (pointer: fine) {
+      .tapzones { display: none; }
+    }
+
+    .overlay {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translate(-50%, 6px) scale(0.92);
+      filter: blur(6px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: #000;
+      color: #fff;
+      border-radius: 999px;
+      font-size: 12px;
+      font-feature-settings: "tnum" 1;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease, transform 260ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
+      transform-origin: center bottom;
+      z-index: 2147483000;
+      user-select: none;
+    }
+    .overlay[data-visible] {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0) scale(1);
+      filter: blur(0);
+    }
+
+    .btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      cursor: default;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 999px;
+      color: rgba(255,255,255,0.72);
+      transition: background 140ms ease, color 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn:active { background: rgba(255,255,255,0.18); }
+    .btn:focus { outline: none; }
+    .btn:focus-visible { outline: none; }
+    .btn::-moz-focus-inner { border: 0; }
+    .btn svg { width: 14px; height: 14px; display: block; }
+    .btn.reset {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0 10px 0 12px;
+      gap: 6px;
+      color: rgba(255,255,255,0.72);
+    }
+    .btn.reset .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1;
+      color: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.12);
+      border-radius: 4px;
+    }
+
+    .count {
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+      font-weight: 500;
+      padding: 0 8px;
+      min-width: 42px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .count .sep { color: rgba(255,255,255,0.45); margin: 0 3px; font-weight: 400; }
+    .count .total { color: rgba(255,255,255,0.55); }
+
+    .divider {
+      width: 1px;
+      height: 14px;
+      background: rgba(255,255,255,0.18);
+      margin: 0 2px;
+    }
+
+    /* ── Print: one page per slide, no chrome ────────────────────────────
+       The screen layout stacks every slide at inset:0 inside a scaled
+       canvas; for print we want them in document flow at the authored
+       design size so the browser paginates one slide per sheet. The
+       @page size is set from the width/height attributes via the inline
+       <style id="deck-stage-print-page"> that connectedCallback injects
+       into <head> (the @page at-rule has no effect inside shadow DOM). */
+    @media print {
+      :host {
+        position: static;
+        inset: auto;
+        background: none;
+        overflow: visible;
+        color: inherit;
+      }
+      .stage { position: static; display: block; }
+      .canvas {
+        transform: none !important;
+        width: auto !important;
+        height: auto !important;
+        background: none;
+        will-change: auto;
+      }
+      ::slotted(*) {
+        position: relative !important;
+        inset: auto !important;
+        width: var(--deck-design-w) !important;
+        height: var(--deck-design-h) !important;
+        box-sizing: border-box !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto;
+        break-after: page;
+        page-break-after: always;
+        break-inside: avoid;
+        overflow: hidden;
+      }
+      ::slotted(*:last-child) {
+        break-after: auto;
+        page-break-after: auto;
+      }
+      .overlay, .tapzones { display: none !important; }
+    }
+  `;
+
+  class DeckStage extends HTMLElement {
+    static get observedAttributes() { return ['width', 'height', 'noscale']; }
+
+    constructor() {
+      super();
+      this._root = this.attachShadow({ mode: 'open' });
+      this._index = 0;
+      this._slides = [];
+      this._notes = [];
+      this._hideTimer = null;
+      this._mouseIdleTimer = null;
+
+      this._onKey = this._onKey.bind(this);
+      this._onResize = this._onResize.bind(this);
+      this._onSlotChange = this._onSlotChange.bind(this);
+      this._onMouseMove = this._onMouseMove.bind(this);
+      this._onTapBack = this._onTapBack.bind(this);
+      this._onTapForward = this._onTapForward.bind(this);
+    }
+
+    get designWidth() {
+      return parseInt(this.getAttribute('width'), 10) || DESIGN_W_DEFAULT;
+    }
+    get designHeight() {
+      return parseInt(this.getAttribute('height'), 10) || DESIGN_H_DEFAULT;
+    }
+
+    connectedCallback() {
+      this._render();
+      this._loadNotes();
+      this._syncPrintPageRule();
+      window.addEventListener('keydown', this._onKey);
+      window.addEventListener('resize', this._onResize);
+      window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      // Initial collection + layout happens via slotchange, which fires on mount.
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('keydown', this._onKey);
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('mousemove', this._onMouseMove);
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
+    }
+
+    attributeChangedCallback() {
+      if (this._canvas) {
+        this._canvas.style.width = this.designWidth + 'px';
+        this._canvas.style.height = this.designHeight + 'px';
+        this._canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+        this._canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+        this._fit();
+        this._syncPrintPageRule();
+      }
+    }
+
+    _render() {
+      const style = document.createElement('style');
+      style.textContent = stylesheet;
+
+      const stage = document.createElement('div');
+      stage.className = 'stage';
+
+      const canvas = document.createElement('div');
+      canvas.className = 'canvas';
+      canvas.style.width = this.designWidth + 'px';
+      canvas.style.height = this.designHeight + 'px';
+      canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+      canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+
+      const slot = document.createElement('slot');
+      slot.addEventListener('slotchange', this._onSlotChange);
+      canvas.appendChild(slot);
+      stage.appendChild(canvas);
+
+      // Tap zones (mobile): left third = back, right third = forward.
+      const tapzones = document.createElement('div');
+      tapzones.className = 'tapzones export-hidden';
+      tapzones.setAttribute('aria-hidden', 'true');
+      tapzones.setAttribute('data-noncommentable', '');
+      const tzBack = document.createElement('div');
+      tzBack.className = 'tapzone tapzone--back';
+      const tzMid = document.createElement('div');
+      tzMid.className = 'tapzone tapzone--mid';
+      tzMid.style.pointerEvents = 'none';
+      const tzFwd = document.createElement('div');
+      tzFwd.className = 'tapzone tapzone--fwd';
+      tzBack.addEventListener('click', this._onTapBack);
+      tzFwd.addEventListener('click', this._onTapForward);
+      tapzones.append(tzBack, tzMid, tzFwd);
+
+      // Overlay: compact, solid black, with clickable controls.
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay export-hidden';
+      overlay.setAttribute('role', 'toolbar');
+      overlay.setAttribute('aria-label', 'Deck controls');
+      overlay.setAttribute('data-noncommentable', '');
+      overlay.innerHTML = `
+        <button class="btn prev" type="button" aria-label="Previous slide" title="Previous (←)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+        </button>
+        <span class="count" aria-live="polite"><span class="current">1</span><span class="sep">/</span><span class="total">1</span></span>
+        <button class="btn next" type="button" aria-label="Next slide" title="Next (→)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+        </button>
+        <span class="divider"></span>
+        <button class="btn reset" type="button" aria-label="Reset to first slide" title="Reset (R)">Reset<span class="kbd">R</span></button>
+      `;
+
+      overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
+      overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
+      overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
+
+      this._root.append(style, stage, tapzones, overlay);
+      this._canvas = canvas;
+      this._slot = slot;
+      this._overlay = overlay;
+      this._countEl = overlay.querySelector('.current');
+      this._totalEl = overlay.querySelector('.total');
+    }
+
+    /** @page must live in the document stylesheet — it's a no-op inside
+     *  shadow DOM. Inject/update a single <head> style tag so the print
+     *  sheet matches the design size and Save-as-PDF yields one slide per
+     *  page with no margins. */
+    _syncPrintPageRule() {
+      const id = 'deck-stage-print-page';
+      let tag = document.getElementById(id);
+      if (!tag) {
+        tag = document.createElement('style');
+        tag.id = id;
+        document.head.appendChild(tag);
+      }
+      tag.textContent =
+        '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } ' +
+        '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } ' +
+        '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+    }
+
+    _onSlotChange() {
+      this._collectSlides();
+      this._restoreIndex();
+      this._applyIndex({ showOverlay: false, broadcast: true, reason: 'init' });
+      this._fit();
+    }
+
+    _collectSlides() {
+      const assigned = this._slot.assignedElements({ flatten: true });
+      this._slides = assigned.filter((el) => {
+        // Skip template/style/script nodes even if someone slots them.
+        const tag = el.tagName;
+        return tag !== 'TEMPLATE' && tag !== 'SCRIPT' && tag !== 'STYLE';
+      });
+
+      this._slides.forEach((slide, i) => {
+        const n = i + 1;
+        // Determine a label for comment flow: prefer explicit data-label,
+        // then an existing data-screen-label, then first heading, else "Slide".
+        let label = slide.getAttribute('data-label');
+        if (!label) {
+          const existing = slide.getAttribute('data-screen-label');
+          if (existing) {
+            // Strip any leading number the author may have included.
+            label = existing.replace(/^\s*\d+\s*/, '').trim() || existing;
+          }
+        }
+        if (!label) {
+          const h = slide.querySelector('h1, h2, h3, [data-title]');
+          if (h) label = (h.textContent || '').trim().slice(0, 40);
+        }
+        if (!label) label = 'Slide';
+        slide.setAttribute('data-screen-label', `${pad2(n)} ${label}`);
+
+        // Validation attribute for comment flow / auto-checks.
+        if (!slide.hasAttribute('data-om-validate')) {
+          slide.setAttribute('data-om-validate', VALIDATE_ATTR);
+        }
+
+        slide.setAttribute('data-deck-slide', String(i));
+      });
+
+      if (this._totalEl) this._totalEl.textContent = String(this._slides.length || 1);
+      if (this._index >= this._slides.length) this._index = Math.max(0, this._slides.length - 1);
+    }
+
+    _loadNotes() {
+      const tag = document.getElementById('speaker-notes');
+      if (!tag) { this._notes = []; return; }
+      try {
+        const parsed = JSON.parse(tag.textContent || '[]');
+        if (Array.isArray(parsed)) this._notes = parsed;
+      } catch (e) {
+        console.warn('[deck-stage] Failed to parse #speaker-notes JSON:', e);
+        this._notes = [];
+      }
+    }
+
+    _restoreIndex() {
+      // The host's ?slide= param is delivered as a #<int> hash (1-indexed) on
+      // the iframe src. No hash → slide 1; the deck itself keeps no position
+      // state across loads.
+      const h = (location.hash || '').match(/^#(\d+)$/);
+      if (h) {
+        const n = parseInt(h[1], 10) - 1;
+        if (n >= 0 && n < this._slides.length) this._index = n;
+      }
+    }
+
+    _applyIndex({ showOverlay = true, broadcast = true, reason = 'init' } = {}) {
+      if (!this._slides.length) return;
+      const prev = this._prevIndex == null ? -1 : this._prevIndex;
+      const curr = this._index;
+      // Keep the iframe's own hash in sync so an in-iframe location.reload()
+      // (reload banner path in viewer-handle.ts) lands on the current slide,
+      // not the stale deep-link hash from initial load.
+      try { history.replaceState(null, '', '#' + (curr + 1)); } catch (e) {}
+      this._slides.forEach((s, i) => {
+        if (i === curr) s.setAttribute('data-deck-active', '');
+        else s.removeAttribute('data-deck-active');
+      });
+      if (this._countEl) this._countEl.textContent = String(curr + 1);
+
+      if (broadcast) {
+        // (1) Legacy: host-window postMessage for speaker-notes renderers.
+        try { window.postMessage({ slideIndexChanged: curr }, '*'); } catch (e) {}
+
+        // (2) In-page CustomEvent on the <deck-stage> element itself.
+        //     Bubbles and composes out of shadow DOM so slide code can listen:
+        //       document.querySelector('deck-stage').addEventListener('slidechange', e => {
+        //         e.detail.index, e.detail.previousIndex, e.detail.total, e.detail.slide, e.detail.reason
+        //       });
+        const detail = {
+          index: curr,
+          previousIndex: prev,
+          total: this._slides.length,
+          slide: this._slides[curr] || null,
+          previousSlide: prev >= 0 ? (this._slides[prev] || null) : null,
+          reason: reason, // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+        };
+        this.dispatchEvent(new CustomEvent('slidechange', {
+          detail,
+          bubbles: true,
+          composed: true,
+        }));
+      }
+
+      this._prevIndex = curr;
+      if (showOverlay) this._flashOverlay();
+    }
+
+    _flashOverlay() {
+      if (!this._overlay) return;
+      this._overlay.setAttribute('data-visible', '');
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      this._hideTimer = setTimeout(() => {
+        this._overlay.removeAttribute('data-visible');
+      }, OVERLAY_HIDE_MS);
+    }
+
+    _fit() {
+      if (!this._canvas) return;
+      // PPTX export sets noscale so the DOM capture sees authored-size
+      // geometry — the scaled canvas is in shadow DOM, so the exporter's
+      // resetTransformSelector can't reach .canvas.style.transform directly.
+      if (this.hasAttribute('noscale')) {
+        this._canvas.style.transform = 'none';
+        return;
+      }
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const s = Math.min(vw / this.designWidth, vh / this.designHeight);
+      this._canvas.style.transform = `scale(${s})`;
+    }
+
+    _onResize() { this._fit(); }
+
+    _onMouseMove() {
+      // Keep overlay visible while mouse moves; hide after idle.
+      this._flashOverlay();
+    }
+
+    _onTapBack(e) {
+      e.preventDefault();
+      this._go(this._index - 1, 'tap');
+    }
+
+    _onTapForward(e) {
+      e.preventDefault();
+      this._go(this._index + 1, 'tap');
+    }
+
+    _onKey(e) {
+      // Ignore when the user is typing.
+      const t = e.target;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const key = e.key;
+      let handled = true;
+
+      if (key === 'ArrowRight' || key === 'PageDown' || key === ' ' || key === 'Spacebar') {
+        this._go(this._index + 1, 'keyboard');
+      } else if (key === 'ArrowLeft' || key === 'PageUp') {
+        this._go(this._index - 1, 'keyboard');
+      } else if (key === 'Home') {
+        this._go(0, 'keyboard');
+      } else if (key === 'End') {
+        this._go(this._slides.length - 1, 'keyboard');
+      } else if (key === 'r' || key === 'R') {
+        this._go(0, 'keyboard');
+      } else if (/^[0-9]$/.test(key)) {
+        // 1..9 jump to that slide; 0 jumps to 10.
+        const n = key === '0' ? 9 : parseInt(key, 10) - 1;
+        if (n < this._slides.length) this._go(n, 'keyboard');
+      } else {
+        handled = false;
+      }
+
+      if (handled) {
+        e.preventDefault();
+        this._flashOverlay();
+      }
+    }
+
+    _go(i, reason = 'api') {
+      if (!this._slides.length) return;
+      const clamped = Math.max(0, Math.min(this._slides.length - 1, i));
+      if (clamped === this._index) {
+        this._flashOverlay();
+        return;
+      }
+      this._index = clamped;
+      this._applyIndex({ showOverlay: true, broadcast: true, reason });
+    }
+
+    // Public API ------------------------------------------------------------
+
+    /** Current slide index (0-based). */
+    get index() { return this._index; }
+    /** Total slide count. */
+    get length() { return this._slides.length; }
+    /** Programmatically navigate. */
+    goTo(i) { this._go(i, 'api'); }
+    next() { this._go(this._index + 1, 'api'); }
+    prev() { this._go(this._index - 1, 'api'); }
+    reset() { this._go(0, 'api'); }
+  }
+
+  if (!customElements.get('deck-stage')) {
+    customElements.define('deck-stage', DeckStage);
+  }
+})();
+
+</script>
+<style>
+:root {
+  --parchment: #EFE6D6;
+  --sand: #E2D4BD;
+  --char: #241C14;
+  --terracotta: #B9532C;
+  --bronze: #7C6A4E;
+  --char-10: rgba(36,28,20,0.10);
+  --char-20: rgba(36,28,20,0.20);
+  --char-40: rgba(36,28,20,0.40);
+  --parchment-15: rgba(239,230,214,0.15);
+  --parchment-30: rgba(239,230,214,0.30);
+  --parchment-60: rgba(239,230,214,0.60);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Shared slide base ── */
+section {
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'IBM Plex Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Section label (top-left badge) ── */
+.sec-label {
+  position: absolute;
+  top: 64px; left: 80px;
+  font-size: 24px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+.sec-label-light {
+  color: var(--parchment-30);
+}
+
+/* ── Page number (bottom right) ── */
+.pg {
+  display: none;
+}
+
+/* ── Divider ── */
+.div-h { width: 100%; height: 1px; background: var(--char-10); }
+.div-h-light { background: var(--parchment-15); }
+
+/* ═══════════════════════════════════════
+   SLIDE 1 — COVER
+   ═══════════════════════════════════════ */
+.s-cover {
+  background: var(--char);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.cover-kanji {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 180px;
+  line-height: 1;
+  color: var(--parchment);
+  opacity: 0.06;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  letter-spacing: -0.05em;
+}
+.cover-enso {
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
+.cover-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 120px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--parchment);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 24px;
+}
+.cover-sub {
+  font-size: 24px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--parchment-30);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  white-space: nowrap;
+}
+.cover-dot { display: inline-block; width: 3px; height: 3px; background: var(--terracotta); border-radius: 50%; }
+
+/* ═══════════════════════════════════════
+   SLIDE 2 — CONCEPT
+   ═══════════════════════════════════════ */
+.s-concept { background: var(--parchment); }
+.concept-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.concept-left {
+  padding: 120px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid var(--char-10);
+}
+.concept-right {
+  padding: 120px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 56px;
+}
+.concept-kanji {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 200px;
+  line-height: 1;
+  color: var(--char);
+  opacity: 0.06;
+}
+.concept-headline {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 72px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--char);
+}
+.concept-headline em { font-style: italic; color: var(--terracotta); }
+.concept-block {}
+.concept-block-label {
+  font-size: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.concept-block-label::before { content: ''; width: 20px; height: 1px; background: var(--terracotta); opacity: 0.5; }
+.concept-block-text {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 26px;
+  line-height: 1.65;
+  color: var(--char);
+}
+
+/* ═══════════════════════════════════════
+   SLIDE 3 — LOGO STACKED
+   ═══════════════════════════════════════ */
+.s-logo-stacked { background: var(--parchment); }
+.logo-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+.logo-variant-label {
+  position: absolute;
+  top: 64px; left: 80px;
+  font-size: 24px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+.logo-wordmark-xl {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 160px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--char);
+}
+.logo-tagline-xl {
+  font-size: 24px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+}
+.tc-dot { display: inline-block; width: 4px; height: 4px; background: var(--terracotta); border-radius: 50%; }
+
+/* ═══════════════════════════════════════
+   SLIDE 4 — LOGO REVERSE + MARK ONLY
+   ═══════════════════════════════════════ */
+.s-logo-variants {
+  background: var(--parchment);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.logo-reverse-panel {
+  background: var(--terracotta);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  position: relative;
+}
+.logo-reverse-label {
+  position: absolute;
+  top: 48px; left: 60px;
+  font-size: 24px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(239,230,214,0.45);
+}
+.logo-reverse-inline {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.logo-wordmark-reverse {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 96px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--parchment);
+}
+.logo-mark-panel {
+  background: var(--sand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  position: relative;
+}
+.logo-mark-label {
+  position: absolute;
+  top: 48px; left: 60px;
+  font-size: 24px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  opacity: 0.6;
+}
+.mark-usage-note {
+  font-family: 'Spectral', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 24px;
+  color: var(--bronze);
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════
+   SLIDE 5 — COLORS
+   ═══════════════════════════════════════ */
+.s-colors { background: var(--parchment); }
+.colors-grid {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 480px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+.color-col { display: flex; flex-direction: column; }
+.color-swatch-tall { flex: 1; }
+.color-info-block {
+  padding: 24px 32px 32px;
+  background: var(--parchment);
+}
+.color-token {
+  font-size: 24px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 6px;
+}
+.color-hex-val {
+  font-size: 26px;
+  letter-spacing: 0.06em;
+  color: var(--char);
+  margin-bottom: 4px;
+}
+.color-role-desc {
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--bronze);
+  opacity: 0.7;
+  line-height: 1.5;
+}
+.colors-header {
+  position: absolute;
+  top: 120px; left: 80px;
+  right: 80px;
+}
+.slide-title-lg {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 64px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--char);
+  margin-bottom: 16px;
+}
+.slide-title-lg em { font-style: italic; color: var(--terracotta); }
+.slide-desc {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 26px;
+  line-height: 1.6;
+  color: var(--bronze);
+  max-width: 600px;
+}
+
+/* ═══════════════════════════════════════
+   SLIDE 6 — TYPOGRAPHY
+   ═══════════════════════════════════════ */
+.s-type { background: var(--parchment); }
+.type-split {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.type-col {
+  padding: 160px 56px 80px;
+  border-right: 1px solid var(--char-10);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.type-col:last-child { border-right: none; }
+.type-col-name {
+  font-size: 24px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 32px;
+}
+.type-specimen-big {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 80px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--char);
+}
+.type-specimen-big em { font-style: italic; color: var(--terracotta); }
+.type-specimen-body {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 24px;
+  line-height: 1.7;
+  color: var(--char);
+}
+.type-specimen-mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 26px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--char);
+  line-height: 1.8;
+}
+.type-meta-block { display: flex; flex-direction: column; gap: 8px; }
+.type-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--char-10);
+}
+.type-meta-key { font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bronze); }
+.type-meta-val { font-size: 24px; letter-spacing: 0.04em; color: var(--char-40); }
+
+/* ═══════════════════════════════════════
+   SLIDE 7 — VOICE
+   ═══════════════════════════════════════ */
+.s-voice { background: var(--char); }
+.voice-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.voice-do {
+  padding: 120px 80px;
+  border-right: 1px solid var(--parchment-15);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.voice-dont {
+  padding: 120px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.voice-section-label {
+  font-size: 24px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 48px;
+}
+.voice-do .voice-section-label { color: var(--terracotta); }
+.voice-dont .voice-section-label { color: rgba(239,230,214,0.25); }
+.voice-item {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--parchment-15);
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 26px;
+  line-height: 1.45;
+  color: var(--parchment);
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+.voice-item:last-child { border-bottom: none; }
+.voice-item-marker { font-style: normal; font-family: 'IBM Plex Mono', monospace; font-size: 24px; letter-spacing: 0.1em; flex-shrink: 0; }
+.voice-do .voice-item-marker { color: var(--terracotta); }
+.voice-dont .voice-item-marker { color: rgba(239,230,214,0.25); }
+.voice-dont .voice-item { color: rgba(239,230,214,0.35); }
+
+/* ═══════════════════════════════════════
+   SLIDE 8 — CONSTRUCTION NOTES
+   ═══════════════════════════════════════ */
+.s-construction { background: var(--parchment); }
+.construction-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.construction-cell {
+  padding: 104px 72px 48px;
+  border-bottom: 1px solid var(--char-10);
+  border-right: 1px solid var(--char-10);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.construction-cell:nth-child(2n) { border-right: none; }
+.construction-cell:nth-child(3),
+.construction-cell:nth-child(4) { border-bottom: none; }
+.cell-label {
+  font-size: 24px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 24px;
+}
+.cell-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.cell-note {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 24px;
+  line-height: 1.65;
+  color: var(--bronze);
+  margin-top: auto;
+}
+/* Clear space demo */
+.clearspace-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.clearspace-inner {
+  border: 1px dashed rgba(185,83,44,0.3);
+  padding: 32px;
+  position: relative;
+}
+/* Minimum size demo */
+.minsize-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+}
+/* Tracking demo */
+.tracking-demo { display: flex; flex-direction: column; gap: 16px; }
+.tracking-row { display: flex; justify-content: space-between; align-items: baseline; }
+.tracking-sample { font-family: 'IBM Plex Mono', monospace; font-size: 24px; color: var(--char); }
+.tracking-val { font-size: 24px; letter-spacing: 0.08em; color: var(--bronze); }
+
+/* ═══════════════════════════════════════
+   SLIDE 9 — CLOSING
+   ═══════════════════════════════════════ */
+.s-closing {
+  background: var(--char);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.closing-enso { margin-bottom: 48px; }
+.closing-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 80px;
+  letter-spacing: -0.02em;
+  color: var(--parchment);
+  margin-bottom: 20px;
+}
+.closing-sub {
+  font-size: 24px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--parchment-30);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.closing-kanji {
+  position: absolute;
+  bottom: 60px;
+  right: 80px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  color: var(--parchment-15);
+  letter-spacing: 0.1em;
+}
+</style>
+</head>
+<body>
+<deck-stage>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 1 — COVER
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-cover" data-screen-label="01 Cover">
+  <div class="cover-enso" id="enso-cover"></div>
+  <div class="cover-title">zizai</div>
+  <div class="cover-sub">
+    Brand Guidelines
+    <span class="cover-dot"></span>
+    V1.0
+    <span class="cover-dot"></span>
+    April 2026
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 2 — CONCEPT (4-column)
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-concept" data-screen-label="02 Concept">
+  <div class="sec-label">§ 01 — Concept</div>
+  <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:160px 80px 100px;">
+    <div style="padding-right:60px;border-right:1px solid var(--char-10);display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="font-size:24px;letter-spacing:0.14em;text-transform:uppercase;color:var(--terracotta);margin-bottom:32px;">01 — Concept</div>
+      <div style="font-family:'Spectral',serif;font-weight:300;font-size:28px;line-height:1.65;color:var(--char);">A name from the Chinese — at ease, unrestrained, free in oneself.</div>
+    </div>
+    <div style="padding:0 60px;border-right:1px solid var(--char-10);display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="font-size:24px;letter-spacing:0.14em;text-transform:uppercase;color:var(--terracotta);margin-bottom:32px;">02 — Purpose</div>
+      <div style="font-family:'Spectral',serif;font-weight:300;font-size:28px;line-height:1.65;color:var(--char);">Software that automates the repetitive work humans never agreed to do.</div>
+    </div>
+    <div style="padding:0 60px;border-right:1px solid var(--char-10);display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="font-size:24px;letter-spacing:0.14em;text-transform:uppercase;color:var(--terracotta);margin-bottom:32px;">03 — Promise</div>
+      <div style="font-family:'Spectral',serif;font-weight:300;font-size:28px;line-height:1.65;color:var(--char);">Quiet tools. Nothing flashing. Nothing watching. Just hours, returned.</div>
+    </div>
+    <div style="padding-left:60px;display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="font-size:24px;letter-spacing:0.14em;text-transform:uppercase;color:var(--terracotta);margin-bottom:32px;">04 — This Document</div>
+      <div style="font-family:'Spectral',serif;font-weight:300;font-size:28px;line-height:1.65;color:var(--char);">Direction C — Wayfinder. Terracotta and bronze on warm parchment.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 3 — DESIGN PHILOSOPHY
+     ═══════════════════════════════════════════════════════════ -->
+<section style="width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--parchment);font-family:'IBM Plex Mono',monospace;" data-screen-label="03 Philosophy">
+  <div class="sec-label">§ 02 — Design Philosophy</div>
+  <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;padding:140px 80px 80px;gap:0;">
+    <!-- Top: manifesto text -->
+    <div style="grid-column:1/-1;padding-bottom:56px;border-bottom:1px solid var(--char-10);margin-bottom:56px;">
+      <div style="font-family:'Spectral',serif;font-weight:300;font-size:26px;line-height:1.7;color:var(--char);max-width:1400px;">The product gives people their hours back. The brand should do the same with their attention. No hyperactive gradients, no glowing orbs, no synthetic blue, no "AI" iconography. Nothing that signals automation by mimicking a robot.<br><br>Instead: paper, ink, daylight. Type with the manners of a printed book. Calm is the differentiator. Reliability is shown by restraint, not by saying "reliable" ten times.</div>
+    </div>
+    <!-- Bottom: 4 principles -->
+    <div style="display:grid;grid-column:1/-1;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;">
+      <div style="padding-right:56px;border-right:1px solid var(--char-10);">
+        <div style="font-size:24px;letter-spacing:0.12em;color:var(--bronze);margin-bottom:16px;">— 01</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:36px;letter-spacing:-0.01em;color:var(--char);margin-bottom:16px;">Quiet, not silent.</div>
+        <div style="font-family:'Spectral',serif;font-weight:300;font-size:24px;line-height:1.6;color:var(--bronze);">Whitespace is the loudest thing on the page. Every element earns its presence.</div>
+      </div>
+      <div style="padding:0 56px;border-right:1px solid var(--char-10);">
+        <div style="font-size:24px;letter-spacing:0.12em;color:var(--bronze);margin-bottom:16px;">— 02</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:36px;letter-spacing:-0.01em;color:var(--char);margin-bottom:16px;">Made, not generated.</div>
+        <div style="font-family:'Spectral',serif;font-weight:300;font-size:24px;line-height:1.6;color:var(--bronze);">Choices that look hand-set. No filler shapes, no decorative AI iconography.</div>
+      </div>
+      <div style="padding:0 56px;border-right:1px solid var(--char-10);">
+        <div style="font-size:24px;letter-spacing:0.12em;color:var(--bronze);margin-bottom:16px;">— 03</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:36px;letter-spacing:-0.01em;color:var(--char);margin-bottom:16px;">Slow rhythm.</div>
+        <div style="font-family:'Spectral',serif;font-weight:300;font-size:24px;line-height:1.6;color:var(--bronze);">Generous leading, long line-lengths broken with care. Reading should feel like exhaling.</div>
+      </div>
+      <div style="padding-left:56px;">
+        <div style="font-size:24px;letter-spacing:0.12em;color:var(--bronze);margin-bottom:16px;">— 04</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:36px;letter-spacing:-0.01em;color:var(--char);margin-bottom:16px;">One ink, one accent.</div>
+        <div style="font-family:'Spectral',serif;font-weight:300;font-size:24px;line-height:1.6;color:var(--bronze);">Never more than two colours carrying meaning at once. Restraint reads as confidence.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 4 — LOGO STACKED
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-logo-stacked" data-screen-label="04 Logo Stacked">
+  <div class="logo-variant-label">§ 03 — Logo · Stacked</div>
+  <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;border-right:1px solid var(--char-10);position:relative;">
+      <div id="enso-stacked-a"></div>
+      <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:120px;letter-spacing:-0.03em;line-height:1;color:var(--char);">zizai</div>
+      <div class="logo-tagline-xl">Work less <span class="tc-dot"></span> Do more</div>
+      <div style="position:absolute;bottom:48px;left:50%;transform:translateX(-50%);font-size:24px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bronze);white-space:nowrap;">Primary — Char on Parchment</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:var(--sand);position:relative;">
+      <div id="enso-stacked-b"></div>
+      <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:120px;letter-spacing:-0.03em;line-height:1;color:var(--char);">zizai</div>
+      <div class="logo-tagline-xl" style="color:var(--bronze);">Work less <span class="tc-dot"></span> Do more</div>
+      <div style="position:absolute;bottom:48px;left:50%;transform:translateX(-50%);font-size:24px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bronze);white-space:nowrap;">Accent — Terracotta on Sand</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 4 — LOGO REVERSE + MARK ONLY
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-logo-variants" data-screen-label="05 Logo Variants">
+  <div class="logo-reverse-panel">
+    <div class="logo-reverse-label">Reverse</div>
+    <div class="logo-reverse-inline">
+      <div id="enso-reverse"></div>
+      <div class="logo-wordmark-reverse">zizai</div>
+    </div>
+  </div>
+  <div class="logo-mark-panel">
+    <div class="logo-mark-label">Mark Only</div>
+    <div id="enso-mark"></div>
+    <div class="mark-usage-note">Wax-seal substitute on contracts, packaging, founders' letters. Never in UI.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 5 — COLORS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-colors" data-screen-label="06 Colors">
+  <div class="sec-label">§ 04 — Colour · Wayfinder Palette</div>
+  <div class="colors-header">
+    <div class="slide-title-lg">Warm on <em>stone.</em></div>
+    <div class="slide-desc">Terracotta and bronze on warm parchment. Feels like a small trusted studio in Kyoto or Lisbon — not a tech company.</div>
+  </div>
+  <div class="colors-grid">
+    <div class="color-col">
+      <div class="color-swatch-tall" style="background:#EFE6D6;"></div>
+      <div class="color-info-block">
+        <div class="color-token">Parchment</div>
+        <div class="color-hex-val">#EFE6D6</div>
+        <div class="color-role-desc">Primary background</div>
+      </div>
+    </div>
+    <div class="color-col">
+      <div class="color-swatch-tall" style="background:#E2D4BD;"></div>
+      <div class="color-info-block">
+        <div class="color-token">Sand</div>
+        <div class="color-hex-val">#E2D4BD</div>
+        <div class="color-role-desc">Secondary background</div>
+      </div>
+    </div>
+    <div class="color-col">
+      <div class="color-swatch-tall" style="background:#241C14;"></div>
+      <div class="color-info-block" style="background:#241C14;">
+        <div class="color-token" style="color:#7C6A4E;">Char</div>
+        <div class="color-hex-val" style="color:rgba(239,230,214,0.7);">#241C14</div>
+        <div class="color-role-desc" style="color:rgba(239,230,214,0.4);">Primary text</div>
+      </div>
+    </div>
+    <div class="color-col">
+      <div class="color-swatch-tall" style="background:#B9532C;"></div>
+      <div class="color-info-block" style="background:#B9532C;">
+        <div class="color-token" style="color:rgba(239,230,214,0.6);">Terracotta</div>
+        <div class="color-hex-val" style="color:rgba(239,230,214,0.9);">#B9532C</div>
+        <div class="color-role-desc" style="color:rgba(239,230,214,0.5);">Accent · Enso · Period</div>
+      </div>
+    </div>
+    <div class="color-col">
+      <div class="color-swatch-tall" style="background:#7C6A4E;"></div>
+      <div class="color-info-block" style="background:#7C6A4E;">
+        <div class="color-token" style="color:rgba(239,230,214,0.5);">Bronze</div>
+        <div class="color-hex-val" style="color:rgba(239,230,214,0.8);">#7C6A4E</div>
+        <div class="color-role-desc" style="color:rgba(239,230,214,0.4);">Supporting · Labels</div>
+      </div>
+    </div>
+  </div>
+  <div class="pg">05</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 6 — TYPOGRAPHY
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-type" data-screen-label="07 Typography">
+  <div class="sec-label">§ 05 — Typography</div>
+  <div class="type-split">
+    <div class="type-col">
+      <div>
+        <div class="type-col-name">Display — Cormorant Garamond</div>
+        <div class="type-specimen-big">Work<br>less. <em>Do</em><br><em>more.</em></div>
+      </div>
+      <div class="type-meta-block">
+        <div class="type-meta-row">
+          <span class="type-meta-key">Family</span>
+          <span class="type-meta-val">Cormorant Garamond</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Weight</span>
+          <span class="type-meta-val">400 · 400 Italic</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Tracking</span>
+          <span class="type-meta-val">-0.02em to -0.04em</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Use</span>
+          <span class="type-meta-val">Headings · Logo · Quotes</span>
+        </div>
+      </div>
+    </div>
+    <div class="type-col">
+      <div>
+        <div class="type-col-name">Body — Spectral</div>
+        <div class="type-specimen-body">We build systems that do the work you never agreed to do.<br><br><em>Quietly running. Nothing to look at.</em></div>
+      </div>
+      <div class="type-meta-block">
+        <div class="type-meta-row">
+          <span class="type-meta-key">Family</span>
+          <span class="type-meta-val">Spectral</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Weight</span>
+          <span class="type-meta-val">300 · 300 Italic</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Size</span>
+          <span class="type-meta-val">17–22px · 1.65–1.7 lh</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Use</span>
+          <span class="type-meta-val">Body · Letters · Captions</span>
+        </div>
+      </div>
+    </div>
+    <div class="type-col">
+      <div>
+        <div class="type-col-name">Labels / UI — IBM Plex Mono</div>
+        <div class="type-specimen-mono" style="text-transform:none;letter-spacing:0.08em;font-size:26px;">section · 04<br><br>work less · do more<br><br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0a676b78614a7063706b63246466">[email&#160;protected]</a></div>
+      </div>
+      <div class="type-meta-block">
+        <div class="type-meta-row">
+          <span class="type-meta-key">Family</span>
+          <span class="type-meta-val">IBM Plex Mono</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Weight</span>
+          <span class="type-meta-val">400</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Tracking</span>
+          <span class="type-meta-val">0.14em–0.24em</span>
+        </div>
+        <div class="type-meta-row">
+          <span class="type-meta-key">Use</span>
+          <span class="type-meta-val">Labels · Nav · Badges</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pg">06</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 7 — VOICE
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-voice" data-screen-label="08 Voice">
+  <div class="sec-label sec-label-light">§ 07 — Voice</div>
+  <div class="voice-grid">
+    <div class="voice-do">
+      <div class="voice-section-label">— Say this</div>
+      <div class="voice-item"><span class="voice-item-marker">→</span>"Work less, do more."</div>
+      <div class="voice-item"><span class="voice-item-marker">→</span>"The reconciliation finished overnight. Take the morning."</div>
+      <div class="voice-item"><span class="voice-item-marker">→</span>"Quietly running. Nothing to look at."</div>
+      <div class="voice-item"><span class="voice-item-marker">→</span>"Built by two people who got tired of clicking."</div>
+      <div class="voice-item"><span class="voice-item-marker">→</span>"Zizai — at ease, unrestrained, free in oneself."</div>
+    </div>
+    <div class="voice-dont">
+      <div class="voice-section-label">— Never this</div>
+      <div class="voice-item"><span class="voice-item-marker">×</span>"Supercharge your workflow with AI"</div>
+      <div class="voice-item"><span class="voice-item-marker">×</span>"10× your team's productivity"</div>
+      <div class="voice-item"><span class="voice-item-marker">×</span>"Unlock the future of automation"</div>
+      <div class="voice-item"><span class="voice-item-marker">×</span>"Revolutionary, intelligent, next-generation"</div>
+      <div class="voice-item"><span class="voice-item-marker">×</span>Emojis as punctuation. Ever. Anywhere.</div>
+    </div>
+  </div>
+  <div class="pg pg-light">07</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 8 — CONSTRUCTION NOTES
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-construction" data-screen-label="09 Construction">
+  <div class="sec-label">§ 08 — Construction</div>
+  <div class="construction-grid">
+
+    <div class="construction-cell">
+      <div>
+        <div class="cell-label">Clear Space</div>
+        <div class="cell-content">
+          <div class="clearspace-demo">
+            <div class="clearspace-inner">
+              <div id="enso-clear" style="display:inline-block;"></div>
+              <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:52px;letter-spacing:-0.03em;color:var(--char);display:inline-block;vertical-align:middle;margin-left:12px;">zizai</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cell-note">Minimum clearspace around the logo: the cap-height of the "z" in the wordmark.</div>
+    </div>
+
+    <div class="construction-cell">
+      <div>
+        <div class="cell-label">Minimum Size</div>
+        <div class="cell-content">
+          <div class="minsize-row" style="padding: 20px 0;">
+            <div style="text-align:center;">
+              <div id="enso-min-sm" style="display:inline-block;margin-bottom:8px;"></div><br>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:24px;letter-spacing:0.1em;color:var(--bronze);">16px</span>
+            </div>
+            <div style="text-align:center;">
+              <div id="enso-min-md" style="display:inline-block;margin-bottom:8px;"></div><br>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:24px;letter-spacing:0.1em;color:var(--bronze);">32px</span>
+            </div>
+            <div style="text-align:center;">
+              <div id="enso-min-lg" style="display:inline-block;margin-bottom:8px;"></div><br>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:24px;letter-spacing:0.1em;color:var(--bronze);">64px</span>
+            </div>
+            <div style="text-align:center;">
+              <div id="enso-min-xl" style="display:inline-block;margin-bottom:8px;"></div><br>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:24px;letter-spacing:0.1em;color:var(--bronze);">120px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cell-note">Minimum recommended size: 24px. Below 16px: wordmark only, no enso.</div>
+    </div>
+
+    <div class="construction-cell">
+      <div>
+        <div class="cell-label">Tracking</div>
+        <div class="cell-content" style="align-items:flex-start; padding-top:24px;">
+          <div class="tracking-demo" style="width:100%;">
+            <div class="tracking-row">
+              <span class="tracking-sample" style="letter-spacing:0;">ZIZAI (0)</span>
+              <span class="tracking-val">0‰</span>
+            </div>
+            <div class="tracking-row">
+              <span class="tracking-sample" style="letter-spacing:0.1em;">ZIZAI (100)</span>
+              <span class="tracking-val">100‰</span>
+            </div>
+            <div class="tracking-row">
+              <span class="tracking-sample" style="letter-spacing:0.18em;">LABELS (180)</span>
+              <span class="tracking-val">180‰ — labels</span>
+            </div>
+            <div class="tracking-row">
+              <span class="tracking-sample" style="letter-spacing:0.24em;">SECTION · 04</span>
+              <span class="tracking-val">240‰ — section headers</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cell-note">IBM Plex Mono labels: 80–240‰ tracking. Display (Cormorant): -30‰ to -40‰.</div>
+    </div>
+
+    <div class="construction-cell">
+      <div>
+        <div class="cell-label">The Period</div>
+        <div class="cell-content" style="justify-content:center;">
+          <div style="text-align:center;">
+            <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:120px;letter-spacing:-0.03em;color:var(--char);line-height:1;">zizai<em style="font-style:italic;color:var(--terracotta);">.</em></div>
+          </div>
+        </div>
+      </div>
+      <div class="cell-note">The italic terracotta period is the only ornament. A held breath, not a full stop. Used at small sizes: nav, signature, business card.</div>
+    </div>
+
+  </div>
+  <div class="pg">08</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SLIDE 9 — CLOSING
+     ═══════════════════════════════════════════════════════════ -->
+<section class="s-closing" data-screen-label="10 Closing">
+  <div class="closing-enso" id="enso-closing"></div>
+  <div class="closing-title">zizai.</div>
+  <div class="closing-sub">
+    Work less
+    <span class="cover-dot"></span>
+    Do more
+    <span class="cover-dot"></span>
+    MMXXVI
+  </div>
+  <div class="closing-kanji">— End of Document</div>
+</section>
+
+</deck-stage>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── Real enso paths from uploaded SVG ──────────────────────
+
+const ENSO_MAIN = `M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18`;
+const ENSO_HL   = `M 76 30 C 88 44, 88 62, 74 76`;
+
+function makeEnso(w, h, color, _unused, extraStyle = '') {
+  return `<svg width="${w}" height="${h}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"${extraStyle ? ' style="'+extraStyle+'"' : ''}>
+    <path d="${ENSO_MAIN}" stroke="${color}" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="${ENSO_HL}" stroke="${color}" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+  </svg>`;
+}
+
+// Inject all enso instances
+document.getElementById('enso-cover').innerHTML     = makeEnso(120, 120, '#B9532C', 'ef-cover');
+document.getElementById('enso-stacked-a') && (document.getElementById('enso-stacked-a').innerHTML = makeEnso(140, 140, '#B9532C', 'ef-stacked-a'));
+document.getElementById('enso-stacked-b') && (document.getElementById('enso-stacked-b').innerHTML = makeEnso(140, 140, '#B9532C', 'ef-stacked-b'));
+document.getElementById('enso-reverse').innerHTML   = makeEnso(80, 80,  '#EFE6D6', 'ef-reverse');
+document.getElementById('enso-mark').innerHTML      = makeEnso(200, 200,'#B9532C', 'ef-mark');
+document.getElementById('enso-clear').innerHTML     = makeEnso(48, 48,  '#241C14', 'ef-clear');
+document.getElementById('enso-min-sm').innerHTML    = makeEnso(16, 16,  '#B9532C', 'ef-ms');
+document.getElementById('enso-min-md').innerHTML    = makeEnso(32, 32,  '#B9532C', 'ef-mm');
+document.getElementById('enso-min-lg').innerHTML    = makeEnso(64, 64,  '#B9532C', 'ef-ml');
+document.getElementById('enso-min-xl').innerHTML    = makeEnso(120,120, '#B9532C', 'ef-mx');
+document.getElementById('enso-closing').innerHTML   = makeEnso(100, 100,'#B9532C', 'ef-closing');
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#241C14"/>
+    <text x="60" y="55" font-family="serif" font-size="32" fill="#EFE6D6" letter-spacing="-1">zizai</text>
+    <text x="46" y="90" font-family="monospace" font-size="9" fill="rgba(239,230,214,0.3)" letter-spacing="3">BRAND GUIDELINES</text>
+  </svg>
+</template>
+
+</body>
+</html>

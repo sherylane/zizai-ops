@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Letter Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Spectral:ital,wght@0,200;0,300;0,400;1,200;1,300&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --parchment: #EFE6D6;
+  --sand: #E2D4BD;
+  --char: #241C14;
+  --terracotta: #B9532C;
+  --bronze: #7C6A4E;
+  --char-10: rgba(36,28,20,0.10);
+  --char-20: rgba(36,28,20,0.20);
+  --char-40: rgba(36,28,20,0.40);
+}
+
+body {
+  background: var(--sand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px 80px;
+  min-height: 100vh;
+  font-family: 'IBM Plex Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Page label */
+.page-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 32px;
+  align-self: flex-start;
+  max-width: 680px;
+  width: 100%;
+}
+
+/* Letter card */
+.letter {
+  background: var(--parchment);
+  width: 100%;
+  max-width: 680px;
+  border: 1px solid var(--char-10);
+}
+
+/* Letter header */
+.letter-header {
+  padding: 40px 48px 32px;
+  border-bottom: 1px solid var(--char-10);
+}
+.letter-header-top {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 16px;
+}
+.letter-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 40px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--char);
+}
+.letter-wordmark em {
+  font-style: italic;
+  color: var(--terracotta);
+}
+
+/* Meta block */
+.letter-meta {
+  padding: 24px 48px;
+  border-bottom: 1px solid var(--char-10);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meta-row {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.meta-key {
+  color: var(--char-40);
+  flex-shrink: 0;
+  width: 20px;
+}
+.meta-val {
+  color: var(--bronze);
+}
+
+/* Body */
+.letter-body {
+  padding: 40px 48px 48px;
+}
+.letter-text {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--char);
+  text-wrap: pretty;
+}
+.letter-text p + p {
+  margin-top: 20px;
+}
+
+/* Footer */
+.letter-footer {
+  padding: 24px 48px;
+  border-top: 1px solid var(--char-10);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-sig {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+.footer-enso {
+  opacity: 0.2;
+}
+
+/* ── Notification variant ── */
+.notification {
+  background: var(--parchment);
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid var(--char-10);
+  margin-top: 40px;
+}
+.notif-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-top: 48px;
+  margin-bottom: 16px;
+  align-self: flex-start;
+  max-width: 680px;
+  width: 100%;
+}
+.notif-header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--char-10);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.notif-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  color: var(--char);
+}
+.notif-brand em { font-style: italic; color: var(--terracotta); }
+.notif-timestamp {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--bronze);
+}
+.notif-body {
+  padding: 24px 28px 28px;
+}
+.notif-subject {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notif-subject::before {
+  content: '';
+  width: 16px;
+  height: 1px;
+  background: var(--terracotta);
+  opacity: 0.5;
+}
+.notif-text {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--char);
+}
+.notif-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--char-10);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--char-40);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.notif-footer::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--char-40);
+}
+
+/* ── Dark notification variant ── */
+.notification-dark {
+  background: var(--char);
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid rgba(239,230,214,0.06);
+}
+.notif-dark-header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid rgba(239,230,214,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.notif-dark-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  color: var(--parchment);
+}
+.notif-dark-brand em { font-style: italic; color: var(--terracotta); }
+.notif-dark-ts { font-size: 9px; letter-spacing: 0.1em; color: rgba(239,230,214,0.25); }
+.notif-dark-body { padding: 24px 28px 28px; }
+.notif-dark-subject {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notif-dark-subject::before {
+  content: '';
+  width: 16px;
+  height: 1px;
+  background: var(--terracotta);
+  opacity: 0.5;
+}
+.notif-dark-text {
+  font-family: 'Spectral', serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--parchment);
+}
+.notif-dark-footer {
+  padding: 16px 28px;
+  border-top: 1px solid rgba(239,230,214,0.06);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(239,230,214,0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.notif-dark-footer::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: rgba(239,230,214,0.2);
+}
+
+.two-col {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  max-width: 1040px;
+  align-items: flex-start;
+}
+</style>
+</head>
+<body>
+
+<div class="page-label">Zizai Letter &amp; Notificatie Templates</div>
+
+<!-- Full Letter -->
+<div class="letter">
+  <div class="letter-header">
+    <div class="letter-header-top">Letter · Header</div>
+    <div class="letter-wordmark">zizai<em>.</em></div>
+  </div>
+  <div class="letter-meta">
+    <div class="meta-row">
+      <span class="meta-key">To</span>
+      <span class="meta-val"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="14477c71666d7875547a7b66707975667f3a777b">[email&#160;protected]</a></span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-key">Re</span>
+      <span class="meta-val">The April Receipts</span>
+    </div>
+  </div>
+  <div class="letter-body">
+    <div class="letter-text">
+      <p>Sheryla — the reconciliation ran overnight. 2,341 receipts, all matched, no exceptions. Nothing for you to look at. Take the morning.</p>
+      <p>We flagged three invoices from Supplier #14 with a value difference above €50. You'll find them in the review queue. Everything else cleared automatically.</p>
+      <p>Next run is scheduled for the 1st. We'll let you know if anything needs your attention.</p>
+    </div>
+  </div>
+  <div class="letter-footer">
+    <div class="footer-sig">Zizai Automation · Work less · Do more</div>
+    <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="footer-enso">
+  <path d="M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18" stroke="#241C14" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M 76 30 C 88 44, 88 62, 74 76" stroke="#241C14" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
+  </div>
+</div>
+
+<!-- Notifications side by side -->
+<div class="notif-label">Notificatie varianten — compact</div>
+<div class="two-col">
+
+  <!-- Light notification -->
+  <div class="notification">
+    <div class="notif-header">
+      <div class="notif-brand">zizai<em>.</em></div>
+      <div class="notif-timestamp">Vandaag · 06:12</div>
+    </div>
+    <div class="notif-body">
+      <div class="notif-subject">Emails verwerkt</div>
+      <div class="notif-text">147 inkomende orders zijn uitgelezen en verwerkt in AFAS. Geen handmatig werk vereist.</div>
+    </div>
+    <div class="notif-footer">Zizai · Quietly running</div>
+  </div>
+
+  <!-- Dark notification -->
+  <div class="notification-dark">
+    <div class="notif-dark-header">
+      <div class="notif-dark-brand">zizai<em>.</em></div>
+      <div class="notif-dark-ts">Vandaag · 06:12</div>
+    </div>
+    <div class="notif-dark-body">
+      <div class="notif-dark-subject">Emails verwerkt</div>
+      <div class="notif-dark-text">147 inkomende orders zijn uitgelezen en verwerkt in AFAS. Geen handmatig werk vereist.</div>
+    </div>
+    <div class="notif-dark-footer">Zizai · Quietly running</div>
+  </div>
+
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#E2D4BD"/>
+    <rect x="20" y="16" width="160" height="108" fill="#EFE6D6"/>
+    <text x="32" y="44" font-family="serif" font-size="22" fill="#241C14">zizai<tspan fill="#B9532C" font-style="italic">.</tspan></text>
+    <line x1="20" y1="55" x2="180" y2="55" stroke="#241C14" stroke-width="0.5" stroke-opacity="0.15"/>
+    <rect x="32" y="65" width="60" height="4" rx="2" fill="#7C6A4E" opacity="0.3"/>
+    <rect x="32" y="75" width="120" height="3" rx="1.5" fill="#241C14" opacity="0.15"/>
+    <rect x="32" y="83" width="100" height="3" rx="1.5" fill="#241C14" opacity="0.15"/>
+    <rect x="32" y="91" width="80" height="3" rx="1.5" fill="#241C14" opacity="0.1"/>
+  </svg>
+</template>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+</html>

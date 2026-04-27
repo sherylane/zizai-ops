@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Spectral:ital,wght@0,200;0,300;0,400;1,200;1,300&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --parchment:#EFE6D6;--sand:#E2D4BD;--char:#241C14;
+  --terracotta:#B9532C;--bronze:#7C6A4E;
+  --char-10:rgba(36,28,20,.10);--char-20:rgba(36,28,20,.20);
+  --parch-15:rgba(239,230,214,.15);--parch-30:rgba(239,230,214,.30);
+  --parch-60:rgba(239,230,214,.60);
+}
+/* ── Deck stage (hand-rolled scale for pitch deck) ── */
+html,body{width:100%;height:100%;overflow:hidden;background:#111;font-family:'IBM Plex Mono',monospace;-webkit-font-smoothing:antialiased;}
+.stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+.canvas{width:1920px;height:1080px;transform-origin:center center;position:relative;}
+section{width:1920px;height:1080px;position:absolute;inset:0;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .3s;}
+section.active{opacity:1;pointer-events:auto;}
+.nav{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.7);border-radius:999px;padding:4px;z-index:100;backdrop-filter:blur(12px);}
+.nav button{appearance:none;border:0;background:transparent;color:rgba(255,255,255,.6);width:32px;height:32px;border-radius:999px;font-size:14px;cursor:default;display:flex;align-items:center;justify-content:center;}
+.nav button:hover{background:rgba(255,255,255,.12);color:#fff;}
+.nav-count{color:#fff;font-size:11px;letter-spacing:.06em;padding:0 8px;min-width:40px;text-align:center;}
+
+/* ── Shared ── */
+.lbl{font-size:20px;letter-spacing:.18em;text-transform:uppercase;color:var(--terracotta);}
+.lbl-lt{color:var(--parch-30);}
+.wordmark{font-family:'Cormorant Garamond',serif;font-weight:400;letter-spacing:-.03em;color:var(--char);}
+.wordmark-lt{color:var(--parchment);}
+
+/* ── S1 COVER ── */
+.s-cover{background:var(--char);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:0 140px 120px;}
+.cover-enso{margin-bottom:40px;}
+.cover-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:140px;letter-spacing:-.03em;line-height:.95;color:var(--parchment);margin-bottom:24px;}
+.cover-sub{font-size:20px;letter-spacing:.16em;text-transform:uppercase;color:var(--parch-30);display:flex;align-items:center;gap:16px;white-space:nowrap;}
+.cover-dot{display:inline-block;width:4px;height:4px;background:var(--terracotta);border-radius:50%;}
+.cover-bg-text{position:absolute;right:100px;top:50%;transform:translateY(-50%);font-family:'Cormorant Garamond',serif;font-size:480px;font-weight:400;line-height:1;color:var(--parchment);opacity:.03;letter-spacing:-.05em;pointer-events:none;white-space:nowrap;}
+
+/* ── S2 PROBLEM ── */
+.s-problem{background:var(--parchment);}
+.problem-inner{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;padding:140px 140px 100px;}
+.problem-left{display:flex;flex-direction:column;justify-content:space-between;padding-right:80px;border-right:1px solid var(--char-10);}
+.problem-right{padding-left:80px;display:flex;flex-direction:column;justify-content:center;gap:48px;}
+.problem-headline{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:80px;letter-spacing:-.025em;line-height:1.05;color:var(--char);}
+.problem-headline em{font-style:italic;color:var(--terracotta);}
+.problem-stat{display:flex;flex-direction:column;gap:8px;padding:32px 0;border-bottom:1px solid var(--char-10);}
+.problem-stat:last-child{border-bottom:none;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:72px;letter-spacing:-.03em;line-height:1;color:var(--terracotta);}
+.stat-desc{font-family:'Spectral',serif;font-weight:300;font-size:22px;line-height:1.55;color:var(--bronze);}
+
+/* ── S3 SOLUTION ── */
+.s-solution{background:var(--char);}
+.solution-inner{position:absolute;inset:0;padding:140px 140px 100px;display:flex;flex-direction:column;justify-content:space-between;}
+.solution-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:96px;letter-spacing:-.03em;line-height:1;color:var(--parchment);}
+.solution-title em{font-style:italic;color:var(--terracotta);}
+.solution-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;}
+.sol-item{padding:32px 40px 32px 0;border-top:1px solid var(--parch-15);border-right:1px solid var(--parch-15);}
+.sol-item:nth-child(4n){border-right:none;padding-right:0;}
+.sol-item:nth-child(n+1){padding-left:40px;}
+.sol-item:nth-child(4n+1){padding-left:0;}
+.sol-num{font-size:18px;letter-spacing:.16em;color:var(--terracotta);margin-bottom:20px;}
+.sol-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:36px;letter-spacing:-.01em;color:var(--parchment);margin-bottom:12px;}
+.sol-desc{font-family:'Spectral',serif;font-weight:300;font-size:22px;line-height:1.6;color:var(--parch-60);}
+
+/* ── S4 HOW ── */
+.s-how{background:var(--parchment);}
+.how-inner{position:absolute;inset:0;padding:140px 140px 100px;}
+.how-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:80px;letter-spacing:-.025em;color:var(--char);margin-bottom:80px;}
+.how-steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
+.how-step{padding:40px 60px 40px 0;border-right:1px solid var(--char-10);display:flex;flex-direction:column;gap:20px;}
+.how-step:last-child{border-right:none;padding-right:0;}
+.how-step:nth-child(n+2){padding-left:60px;}
+.step-num{font-size:18px;letter-spacing:.18em;color:var(--bronze);display:flex;align-items:center;gap:12px;}
+.step-num::after{content:'';flex:0 0 24px;height:1px;background:var(--char-20);}
+.step-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:44px;letter-spacing:-.01em;color:var(--char);}
+.step-desc{font-family:'Spectral',serif;font-weight:300;font-size:22px;line-height:1.65;color:var(--bronze);}
+
+/* ── S5 PRODUCTS ── */
+.s-products{background:var(--sand);}
+.products-inner{position:absolute;inset:0;padding:140px 140px 100px;display:flex;flex-direction:column;justify-content:space-between;}
+.products-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;}
+.prod-item{padding:32px;border:1px solid var(--char-10);border-left:none;display:flex;flex-direction:column;gap:12px;background:var(--parchment);}
+.prod-item:first-child{border-left:1px solid var(--char-10);}
+.prod-label{font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:var(--terracotta);}
+.prod-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:32px;letter-spacing:-.01em;color:var(--char);}
+.prod-desc{font-family:'Spectral',serif;font-weight:300;font-size:20px;line-height:1.6;color:var(--bronze);}
+.prod-status{font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:var(--bronze);opacity:.6;margin-top:auto;}
+
+/* ── S6 APHORISM ── */
+.s-aph{background:var(--terracotta);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;}
+.aph-enso{}
+.aph-quote{font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:80px;letter-spacing:-.02em;line-height:1.2;color:var(--parchment);text-align:center;max-width:1200px;}
+.aph-attr{font-size:18px;letter-spacing:.16em;text-transform:uppercase;color:rgba(239,230,214,.5);}
+
+/* ── S7 ABOUT ── */
+.s-about{background:var(--parchment);}
+.about-inner{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;padding:140px 140px 100px;}
+.about-left{display:flex;flex-direction:column;justify-content:space-between;padding-right:80px;border-right:1px solid var(--char-10);}
+.about-right{padding-left:80px;display:flex;flex-direction:column;justify-content:center;gap:40px;}
+.about-headline{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:72px;letter-spacing:-.025em;line-height:1.1;color:var(--char);}
+.about-headline em{font-style:italic;color:var(--terracotta);}
+.about-body{font-family:'Spectral',serif;font-weight:300;font-size:24px;line-height:1.7;color:var(--char);}
+.about-founders{display:flex;gap:60px;margin-top:20px;}
+.founder-name{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:32px;color:var(--char);}
+.founder-role{font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:var(--bronze);margin-top:4px;}
+
+/* ── S8 CTA ── */
+.s-cta{background:var(--char);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:0 140px 120px;}
+.cta-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:110px;letter-spacing:-.03em;line-height:1;color:var(--parchment);margin-bottom:40px;}
+.cta-title em{font-style:italic;color:var(--terracotta);}
+.cta-contact{font-size:20px;letter-spacing:.12em;color:var(--parch-60);display:flex;gap:48px;}
+.cta-enso{position:absolute;right:140px;top:50%;transform:translateY(-50%);opacity:.12;}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="canvas" id="canvas">
+
+<!-- ─── SLIDE 1: COVER ─── -->
+<section class="s-cover active" data-screen-label="01 Cover">
+  <div class="cover-bg-text">zizai</div>
+  <div class="cover-enso" id="enso-s1"></div>
+  <div class="cover-title">Work less.<br>Do more.</div>
+  <div class="cover-sub">
+    Automation Atelier
+    <span class="cover-dot"></span>
+    Amsterdam
+    <span class="cover-dot"></span>
+    2026
+  </div>
+</section>
+
+<!-- ─── SLIDE 2: THE PROBLEM ─── -->
+<section class="s-problem" data-screen-label="02 Problem">
+  <div class="lbl" style="position:absolute;top:64px;left:140px;">01 — The problem</div>
+  <div class="problem-inner">
+    <div class="problem-left">
+      <div class="problem-headline">Hours lost<br>to work that<br><em>shouldn't exist.</em></div>
+    </div>
+    <div class="problem-right">
+      <div class="problem-stat">
+        <div class="stat-num">15+</div>
+        <div class="stat-desc">Hours per week lost to manual data entry, copying between systems, and checking work that could check itself.</div>
+      </div>
+      <div class="problem-stat">
+        <div class="stat-num">80%</div>
+        <div class="stat-desc">Of repetitive business processes can be fully automated. Most SMEs have no IT team to do it.</div>
+      </div>
+      <div class="problem-stat">
+        <div class="stat-num">0</div>
+        <div class="stat-desc">Exceptions should reach your desk this morning. The reconciliation already ran.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 3: THE SOLUTION ─── -->
+<section class="s-solution" data-screen-label="03 Solution">
+  <div class="lbl lbl-lt" style="position:absolute;top:64px;left:140px;">02 — What we build</div>
+  <div class="solution-inner">
+    <div class="solution-title">Systems that<br><em>do the clicking.</em></div>
+    <div class="solution-grid">
+      <div class="sol-item">
+        <div class="sol-num">01</div>
+        <div class="sol-title">Email automation</div>
+        <div class="sol-desc">Read emails, extract data, push it automatically into systems like AFAS. No manual entry.</div>
+      </div>
+      <div class="sol-item">
+        <div class="sol-num">02</div>
+        <div class="sol-title">Workflow automation</div>
+        <div class="sol-desc">Automate processes that currently run on human effort. Triggers, steps, exceptions — all handled.</div>
+      </div>
+      <div class="sol-item">
+        <div class="sol-num">03</div>
+        <div class="sol-title">AI agents</div>
+        <div class="sol-desc">Systems that execute multi-step tasks independently and make decisions — without you in the loop.</div>
+      </div>
+      <div class="sol-item">
+        <div class="sol-num">04</div>
+        <div class="sol-title">LLM integrations</div>
+        <div class="sol-desc">Process, understand, and generate text within existing workflows. Language as infrastructure.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 4: HOW WE WORK ─── -->
+<section class="s-how" data-screen-label="04 How">
+  <div class="lbl" style="position:absolute;top:64px;left:140px;">03 — How it works</div>
+  <div class="how-inner">
+    <div class="how-title">Three steps.<br>Then silence.</div>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-num">01</div>
+        <div class="step-title">Discovery call</div>
+        <div class="step-desc">We map which manual work costs the most time. No intake form. One conversation.</div>
+      </div>
+      <div class="how-step">
+        <div class="step-num">02</div>
+        <div class="step-title">Build</div>
+        <div class="step-desc">We design and build a custom automation. Fast, no overhead. First results within days.</div>
+      </div>
+      <div class="how-step">
+        <div class="step-num">03</div>
+        <div class="step-title">Quiet running</div>
+        <div class="step-desc">The system runs. You barely notice — except that the work is done. Quietly running. Nothing to look at.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 5: PRODUCTS ─── -->
+<section class="s-products" data-screen-label="05 Products">
+  <div class="lbl" style="position:absolute;top:64px;left:140px;">04 — Our products</div>
+  <div class="products-inner">
+    <div class="how-title" style="color:var(--char);font-size:72px;margin-bottom:0;">Beyond services —<br>we also ship products.</div>
+    <div class="products-grid">
+      <div class="prod-item">
+        <div class="prod-label">Live</div>
+        <div class="prod-title">Client Intake System</div>
+        <div class="prod-desc">AI-powered product brief generator. Used internally after client discovery calls.</div>
+        <div class="prod-status">In production</div>
+      </div>
+      <div class="prod-item">
+        <div class="prod-label">Live</div>
+        <div class="prod-title">Zizai Insights</div>
+        <div class="prod-desc">Customer intelligence for sales teams. Segment, identify, and act on customer data.</div>
+        <div class="prod-status">In production</div>
+      </div>
+      <div class="prod-item">
+        <div class="prod-label">Building</div>
+        <div class="prod-title">Email Processor</div>
+        <div class="prod-desc">Reads incoming emails, extracts structured data, pushes to any business system automatically.</div>
+        <div class="prod-status">Active development</div>
+      </div>
+      <div class="prod-item">
+        <div class="prod-label">Planned</div>
+        <div class="prod-title">Agent Platform</div>
+        <div class="prod-desc">Multi-step autonomous agents for business workflows. Decisions without a human in the loop.</div>
+        <div class="prod-status">Roadmap</div>
+      </div>
+      <div class="prod-item">
+        <div class="prod-label">Exploring</div>
+        <div class="prod-title">Consumer products</div>
+        <div class="prod-desc">Mobile and consumer experiences built on the same automation infrastructure.</div>
+        <div class="prod-status">Exploration</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 6: APHORISM ─── -->
+<section class="s-aph" data-screen-label="06 Aphorism">
+  <div class="aph-enso" id="enso-s6"></div>
+  <div class="aph-quote">"The reconciliation finished overnight.<br>Take the morning."</div>
+  <div class="aph-attr">Work less · Do more</div>
+</section>
+
+<!-- ─── SLIDE 7: ABOUT US ─── -->
+<section class="s-about" data-screen-label="07 About">
+  <div class="lbl" style="position:absolute;top:64px;left:140px;">05 — Who we are</div>
+  <div class="about-inner">
+    <div class="about-left">
+      <div class="about-headline">Built by two<br>people who got<br><em>tired of clicking.</em></div>
+      <div class="about-founders">
+        <div>
+          <div class="founder-name">Mark</div>
+          <div class="founder-role">Co-founder</div>
+        </div>
+        <div>
+          <div class="founder-name">Sheryla</div>
+          <div class="founder-role">Co-founder</div>
+        </div>
+      </div>
+    </div>
+    <div class="about-right">
+      <div class="about-body">We're not a large agency and don't want to be. We work with a small number of clients at a time, think at a strategic level, and deliver things that actually work.</div>
+      <div class="about-body">Zizai means freedom from the fetters of vexation. We chose that name deliberately.</div>
+      <div style="font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--bronze);margin-top:8px;">Automation Atelier · Amsterdam</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 8: CTA ─── -->
+<section class="s-cta" data-screen-label="08 CTA">
+  <div class="cta-enso" id="enso-s8"></div>
+  <div class="cta-title">How many hours<br>do you lose to work<br>that <em>isn't yours?</em></div>
+  <div class="cta-contact">
+    <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e78f868b8b88a79d8e9d868ec9898b">[email&#160;protected]</a></span>
+    <span>zizai.nl</span>
+    <span>Amsterdam</span>
+  </div>
+</section>
+
+  </div><!-- canvas -->
+</div><!-- stage -->
+
+<!-- Nav -->
+<div class="nav">
+  <button onclick="go(-1)">←</button>
+  <span class="nav-count" id="nav-count">1 / 8</span>
+  <button onclick="go(1)">→</button>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const ENSO_MAIN = 'M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18';
+const ENSO_HL   = 'M 76 30 C 88 44, 88 62, 74 76';
+
+function ensoSVG(w, h, color, opacity) {
+  return `<svg width="${w}" height="${h}" viewBox="0 0 100 100" fill="none">
+    <path d="${ENSO_MAIN}" stroke="${color}" stroke-width="6" stroke-linecap="round" fill="none"${opacity?' opacity="'+opacity+'"':''}/>
+    <path d="${ENSO_HL}" stroke="${color}" stroke-width="2" stroke-linecap="round" fill="none" opacity="${(opacity||1)*0.5}"/>
+  </svg>`;
+}
+
+document.getElementById('enso-s1').innerHTML = ensoSVG(100, 100, '#B9532C');
+document.getElementById('enso-s6').innerHTML = ensoSVG(100, 100, '#EFE6D6');
+document.getElementById('enso-s8').innerHTML = ensoSVG(400, 400, '#EFE6D6');
+
+const slides = document.querySelectorAll('section');
+let cur = 0;
+
+function scale() {
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  document.getElementById('canvas').style.transform = `scale(${s})`;
+}
+scale();
+window.addEventListener('resize', scale);
+
+function go(d) {
+  slides[cur].classList.remove('active');
+  cur = Math.max(0, Math.min(slides.length - 1, cur + d));
+  slides[cur].classList.add('active');
+  document.getElementById('nav-count').textContent = `${cur+1} / ${slides.length}`;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+});
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#241C14"/>
+    <text x="30" y="88" font-family="serif" font-size="48" fill="#EFE6D6" letter-spacing="-2">zizai</text>
+    <text x="30" y="115" font-family="monospace" font-size="9" fill="rgba(239,230,214,.3)" letter-spacing="2">PITCH DECK · 2026</text>
+  </svg>
+</template>
+</body>
+</html>

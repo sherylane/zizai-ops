@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — UI Components</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Spectral:wght@300;400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --parchment:#EFE6D6;--sand:#E2D4BD;--char:#241C14;
+  --terracotta:#B9532C;--bronze:#7C6A4E;
+  --char-06:rgba(36,28,20,.06);--char-10:rgba(36,28,20,.10);
+  --char-20:rgba(36,28,20,.20);--char-40:rgba(36,28,20,.40);
+  --char-60:rgba(36,28,20,.60);
+  /* Semantic */
+  --bg:var(--parchment);--surface:#fff;--surface-2:var(--sand);
+  --text:var(--char);--text-muted:var(--bronze);--text-faint:var(--char-40);
+  --accent:var(--terracotta);--border:var(--char-10);
+  --focus-ring:rgba(185,83,44,.25);
+  /* Spacing */
+  --r:0px; /* no border-radius — brand rule */
+}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;-webkit-font-smoothing:antialiased;padding:0;}
+
+/* ── Page shell ── */
+.page-header{background:var(--char);padding:20px 48px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;}
+.page-header-logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--parchment);letter-spacing:-.02em;}
+.page-header-logo em{font-style:italic;color:var(--terracotta);}
+.page-header-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(239,230,214,.3);}
+
+.page-body{padding:60px 48px 120px;max-width:1400px;margin:0 auto;}
+.kit-section{margin-bottom:80px;}
+.kit-section-title{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--bronze);margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--char-10);}
+.kit-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-bottom:16px;}
+
+/* ═══════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;transition:background .15s,color .15s,transform .15s;white-space:nowrap;}
+.btn-primary{background:var(--char);color:var(--parchment);}
+.btn-primary:hover{background:var(--terracotta);transform:translateY(-1px);}
+.btn-accent{background:var(--terracotta);color:var(--parchment);}
+.btn-accent:hover{background:#a44826;transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--char);border:1px solid var(--char-20);}
+.btn-ghost:hover{border-color:var(--char);color:var(--char);}
+.btn-muted{background:transparent;color:var(--bronze);border:1px solid var(--char-10);}
+.btn-muted:hover{border-color:var(--bronze);color:var(--char);}
+.btn-danger{background:transparent;color:#c0392b;border:1px solid rgba(192,57,43,.2);}
+.btn-danger:hover{background:rgba(192,57,43,.06);border-color:#c0392b;}
+.btn-sm{height:28px;padding:0 14px;font-size:10px;}
+.btn-lg{height:44px;padding:0 28px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* ═══════════════════════════════════
+   INPUTS
+   ═══════════════════════════════════ */
+.field-group{display:flex;flex-direction:column;gap:6px;min-width:240px;}
+.field-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);}
+.field-hint{font-size:10px;letter-spacing:.06em;color:var(--char-40);margin-top:2px;}
+.input{height:36px;padding:0 12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;width:100%;transition:border .15s,box-shadow .15s;}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--focus-ring);}
+.input:disabled{background:var(--char-06);color:var(--char-40);cursor:not-allowed;}
+.input::placeholder{color:var(--char-20);}
+.input-error{border-color:#c0392b;}
+.input-error:focus{box-shadow:0 0 0 3px rgba(192,57,43,.2);}
+textarea.input{height:auto;padding:10px 12px;resize:vertical;min-height:80px;line-height:1.6;}
+select.input{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(36,28,20,.4)' d='M0 0h10L5 6z'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;}
+
+/* ═══════════════════════════════════
+   TOGGLES
+   ═══════════════════════════════════ */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);min-width:280px;}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-info{}
+.toggle-name{font-size:12px;letter-spacing:.04em;color:var(--text);}
+.toggle-desc{font-size:10px;letter-spacing:.04em;color:var(--text-muted);margin-top:2px;}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:var(--char-10);border:1px solid var(--border);transition:background .15s;}
+.toggle input:checked+.toggle-track{background:var(--accent);border-color:var(--accent);}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:12px;height:12px;background:var(--char-40);transition:transform .15s,background .15s;}
+.toggle input:checked~.toggle-thumb{transform:translateX(16px);background:#fff;}
+.toggle input:focus~.toggle-track{box-shadow:0 0 0 3px var(--focus-ring);}
+
+/* ═══════════════════════════════════
+   CHECKBOXES & RADIOS
+   ═══════════════════════════════════ */
+.check-row{display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;}
+.check-box{width:16px;height:16px;border:1px solid var(--char-20);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .12s,border .12s;}
+.check-box.checked{background:var(--accent);border-color:var(--accent);}
+.check-box.checked::after{content:'';width:8px;height:4px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translateY(-1px);}
+.radio-dot{width:16px;height:16px;border:1px solid var(--char-20);border-radius:50%;background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border .12s;}
+.radio-dot.checked{border-color:var(--accent);}
+.radio-dot.checked::after{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;}
+.check-label{font-size:12px;letter-spacing:.04em;color:var(--text);}
+
+/* ═══════════════════════════════════
+   SEGMENTED CONTROL (TABS)
+   ═══════════════════════════════════ */
+.seg{display:inline-flex;border:1px solid var(--border);background:var(--surface);}
+.seg-btn{padding:0 20px;height:32px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:none;background:transparent;color:var(--bronze);cursor:pointer;border-right:1px solid var(--border);transition:background .12s,color .12s;}
+.seg-btn:last-child{border-right:none;}
+.seg-btn.active{background:var(--char);color:var(--parchment);}
+.seg-btn:hover:not(.active){background:var(--char-06);color:var(--char);}
+
+/* ═══════════════════════════════════
+   BADGES / TAGS
+   ═══════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;height:22px;padding:0 10px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;border:1px solid;}
+.badge-default{background:transparent;color:var(--bronze);border-color:var(--char-10);}
+.badge-accent{background:rgba(185,83,44,.08);color:var(--terracotta);border-color:rgba(185,83,44,.2);}
+.badge-dark{background:var(--char);color:var(--parchment);border-color:var(--char);}
+.badge-success{background:rgba(39,120,70,.08);color:#277846;border-color:rgba(39,120,70,.2);}
+.badge-warn{background:rgba(185,140,44,.08);color:#956b10;border-color:rgba(185,140,44,.2);}
+.badge-danger{background:rgba(192,57,43,.08);color:#c0392b;border-color:rgba(192,57,43,.2);}
+
+/* ═══════════════════════════════════
+   CARDS
+   ═══════════════════════════════════ */
+.card{background:var(--surface);border:1px solid var(--border);padding:24px;}
+.card-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:22px;letter-spacing:-.01em;color:var(--char);margin-bottom:6px;}
+.card-meta{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--bronze);margin-bottom:16px;}
+.card-body{font-family:'Spectral',serif;font-weight:300;font-size:15px;line-height:1.65;color:var(--bronze);}
+.card-footer{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-hover{transition:border-color .15s;cursor:pointer;}
+.card-hover:hover{border-color:var(--bronze);}
+
+/* ═══════════════════════════════════
+   DATA TABLE
+   ═══════════════════════════════════ */
+.table-wrap{border:1px solid var(--border);background:var(--surface);overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{border-bottom:1px solid var(--border);background:var(--char-06);}
+th{padding:10px 16px;text-align:left;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--bronze);font-weight:400;}
+td{padding:12px 16px;border-bottom:1px solid var(--char-06);color:var(--text);font-size:12px;letter-spacing:.02em;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--char-06);}
+.td-mono{font-family:'IBM Plex Mono',monospace;}
+.td-muted{color:var(--text-muted);}
+
+/* ═══════════════════════════════════
+   SIDEBAR FILTER (Insights style)
+   ═══════════════════════════════════ */
+.filter-panel{width:220px;background:var(--surface);border:1px solid var(--border);padding:16px 0;}
+.filter-section{padding:0 16px;margin-bottom:0;}
+.filter-section-header{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:11px;letter-spacing:.06em;color:var(--char);border-bottom:1px solid var(--border);cursor:pointer;}
+.filter-section-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:var(--char-06);border:1px solid var(--border);font-size:10px;}
+.filter-section-body{padding:12px 16px;border-bottom:1px solid var(--border);}
+.filter-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.filter-row:last-child{margin-bottom:0;}
+.filter-label{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--bronze);}
+.filter-input{height:28px;padding:0 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border);background:var(--surface);color:var(--text);width:90px;outline:none;}
+.filter-input:focus{border-color:var(--accent);}
+
+/* ═══════════════════════════════════
+   ICONS (inline SVG, branded)
+   ═══════════════════════════════════ */
+.icon-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:0;}
+.icon-item{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 16px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+.icon-item:nth-child(8n){border-right:none;}
+.icon-name{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--bronze);text-align:center;}
+.icon-wrap{width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
+.icon-wrap svg{stroke:var(--char);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ═══════════════════════════════════
+   COLORS (compact)
+   ═══════════════════════════════════ */
+.color-row{display:flex;gap:0;border:1px solid var(--border);}
+.color-chip-inline{flex:1;padding:20px 16px;display:flex;flex-direction:column;gap:4px;border-right:1px solid rgba(0,0,0,.05);}
+.color-chip-inline:last-child{border-right:none;}
+.chip-name{font-size:9px;letter-spacing:.14em;text-transform:uppercase;}
+.chip-hex{font-size:11px;letter-spacing:.04em;}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="page-header-logo">zizai<em>.</em></span>
+  <span class="page-header-label">UI Component Library · Wayfinder</span>
+</div>
+
+<div class="page-body">
+
+  <!-- COLOURS -->
+  <div class="kit-section">
+    <div class="kit-section-title">Colour tokens</div>
+    <div class="color-row">
+      <div class="color-chip-inline" style="background:#EFE6D6;">
+        <div class="chip-name" style="color:#7C6A4E;">Parchment</div>
+        <div class="chip-hex" style="color:#7C6A4E;">#EFE6D6</div>
+      </div>
+      <div class="color-chip-inline" style="background:#E2D4BD;">
+        <div class="chip-name" style="color:#7C6A4E;">Sand</div>
+        <div class="chip-hex" style="color:#7C6A4E;">#E2D4BD</div>
+      </div>
+      <div class="color-chip-inline" style="background:#fff;border:1px solid #E2D4BD;">
+        <div class="chip-name" style="color:#7C6A4E;">Surface</div>
+        <div class="chip-hex" style="color:#7C6A4E;">#FFFFFF</div>
+      </div>
+      <div class="color-chip-inline" style="background:#241C14;">
+        <div class="chip-name" style="color:#7C6A4E;">Char</div>
+        <div class="chip-hex" style="color:#EFE6D6;">#241C14</div>
+      </div>
+      <div class="color-chip-inline" style="background:#B9532C;">
+        <div class="chip-name" style="color:rgba(239,230,214,.7);">Terracotta</div>
+        <div class="chip-hex" style="color:#EFE6D6;">#B9532C</div>
+      </div>
+      <div class="color-chip-inline" style="background:#7C6A4E;">
+        <div class="chip-name" style="color:rgba(239,230,214,.7);">Bronze</div>
+        <div class="chip-hex" style="color:#EFE6D6;">#7C6A4E</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="kit-section">
+    <div class="kit-section-title">Buttons</div>
+    <div class="kit-row">
+      <button class="btn btn-primary">Primary</button>
+      <button class="btn btn-accent">Accent</button>
+      <button class="btn btn-ghost">Ghost</button>
+      <button class="btn btn-muted">Muted</button>
+      <button class="btn btn-danger">Danger</button>
+      <button class="btn btn-primary" disabled>Disabled</button>
+    </div>
+    <div class="kit-row">
+      <button class="btn btn-primary btn-sm">Small</button>
+      <button class="btn btn-primary">Default</button>
+      <button class="btn btn-primary btn-lg">Large</button>
+    </div>
+    <div class="kit-row" style="max-width:320px;">
+      <button class="btn btn-accent btn-full">Generate list →</button>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="kit-section">
+    <div class="kit-section-title">Inputs</div>
+    <div class="kit-row" style="align-items:flex-start;">
+      <div class="field-group">
+        <div class="field-label">Email</div>
+        <input class="input" type="text" placeholder="mark@zizai.nl">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Subject</div>
+        <input class="input" type="text" value="The April receipts">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Error state</div>
+        <input class="input input-error" type="text" value="invalid@">
+        <div class="field-hint" style="color:#c0392b;">Enter a valid email address</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Disabled</div>
+        <input class="input" type="text" value="Read only" disabled>
+      </div>
+    </div>
+    <div class="kit-row" style="align-items:flex-start;">
+      <div class="field-group" style="min-width:300px;">
+        <div class="field-label">Select</div>
+        <select class="input">
+          <option>Discount / promotion</option>
+          <option>Follow-up</option>
+          <option>Win-back</option>
+        </select>
+      </div>
+      <div class="field-group" style="min-width:400px;">
+        <div class="field-label">Message</div>
+        <textarea class="input" rows="3" placeholder="Write your message..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOGGLES -->
+  <div class="kit-section">
+    <div class="kit-section-title">Toggles</div>
+    <div style="max-width:360px;">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-name">Overdue</div>
+          <div class="toggle-desc">Flag customers past their order rhythm</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-name">No repeat order</div>
+          <div class="toggle-desc">Single-purchase customers only</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-name">Order drop</div>
+          <div class="toggle-desc">Customers with declining order volume</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEGMENTED + CHECKBOXES -->
+  <div class="kit-section">
+    <div class="kit-section-title">Selection controls</div>
+    <div class="kit-row" style="align-items:flex-start;gap:48px;">
+      <div>
+        <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);margin-bottom:12px;">Segmented control</div>
+        <div class="seg">
+          <button class="seg-btn">All</button>
+          <button class="seg-btn">B2B</button>
+          <button class="seg-btn active">B2C</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);margin-bottom:12px;">Checkboxes</div>
+        <div class="check-row"><div class="check-box checked"></div><span class="check-label">Email</span></div>
+        <div class="check-row"><div class="check-box"></div><span class="check-label">WhatsApp</span></div>
+        <div class="check-row"><div class="check-box"></div><span class="check-label">SMS</span></div>
+      </div>
+      <div>
+        <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);margin-bottom:12px;">Radio buttons</div>
+        <div class="check-row"><div class="radio-dot checked"></div><span class="check-label">All customers</span></div>
+        <div class="check-row"><div class="radio-dot"></div><span class="check-label">Selected only</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="kit-section">
+    <div class="kit-section-title">Badges</div>
+    <div class="kit-row">
+      <span class="badge badge-default">Default</span>
+      <span class="badge badge-accent">Live</span>
+      <span class="badge badge-dark">Building</span>
+      <span class="badge badge-success">Matched</span>
+      <span class="badge badge-warn">Pending</span>
+      <span class="badge badge-danger">Overdue</span>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="kit-section">
+    <div class="kit-section-title">Cards</div>
+    <div class="kit-row">
+      <div class="card" style="width:320px;">
+        <div class="card-meta">Email automation</div>
+        <div class="card-title">April Receipts</div>
+        <div class="card-body">2,341 invoices processed. 3 flagged for review. Everything else cleared automatically.</div>
+        <div class="card-footer">
+          <span class="badge badge-success">Completed</span>
+          <button class="btn btn-ghost btn-sm">View →</button>
+        </div>
+      </div>
+      <div class="card card-hover" style="width:320px;">
+        <div class="card-meta">Workflow run</div>
+        <div class="card-title">Customer Sync</div>
+        <div class="card-body">Syncing 847 customer records from AFAS to CRM. Running since 06:12 this morning.</div>
+        <div class="card-footer">
+          <span class="badge badge-accent">Running</span>
+          <button class="btn btn-ghost btn-sm">Details →</button>
+        </div>
+      </div>
+      <div class="card" style="width:320px;">
+        <div class="card-meta">Agent task</div>
+        <div class="card-title">Order Review</div>
+        <div class="card-body">3 orders require your decision. Agent has processed and categorised all 147 incoming orders.</div>
+        <div class="card-footer">
+          <span class="badge badge-warn">3 pending</span>
+          <button class="btn btn-accent btn-sm">Review →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="kit-section">
+    <div class="kit-section-title">Data table</div>
+    <div class="table-wrap" style="max-width:800px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Last order</th>
+            <th>Value</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Bakkerij De Molen</td>
+            <td class="td-mono td-muted">12 Mar 2026</td>
+            <td class="td-mono">€ 1,240</td>
+            <td><span class="badge badge-danger">Overdue</span></td>
+            <td><button class="btn btn-ghost btn-sm">Contact</button></td>
+          </tr>
+          <tr>
+            <td>Restaurant Volta</td>
+            <td class="td-mono td-muted">24 Apr 2026</td>
+            <td class="td-mono">€ 3,800</td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td><button class="btn btn-ghost btn-sm">View</button></td>
+          </tr>
+          <tr>
+            <td>Slagerij Van Dijk</td>
+            <td class="td-mono td-muted">01 Apr 2026</td>
+            <td class="td-mono">€ 620</td>
+            <td><span class="badge badge-warn">At risk</span></td>
+            <td><button class="btn btn-ghost btn-sm">Contact</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FILTER PANEL (Insights style) -->
+  <div class="kit-section">
+    <div class="kit-section-title">Filter panel (Insights pattern)</div>
+    <div class="filter-panel">
+      <div class="filter-section-header">
+        <div class="filter-section-icon">⊞</div>
+        Segment
+      </div>
+      <div class="filter-section-body">
+        <div class="seg" style="width:100%;">
+          <button class="seg-btn" style="flex:1;">All</button>
+          <button class="seg-btn" style="flex:1;">B2B</button>
+          <button class="seg-btn active" style="flex:1;">B2C</button>
+        </div>
+      </div>
+      <div class="filter-section-header">
+        <div class="filter-section-icon">▦</div>
+        Period
+      </div>
+      <div class="filter-section-body">
+        <div class="filter-row">
+          <div class="filter-label">From</div>
+          <input class="filter-input" value="03/04/2026" type="text">
+        </div>
+        <div class="filter-row">
+          <div class="filter-label">Until</div>
+          <input class="filter-input" value="27/04/2026" type="text">
+        </div>
+      </div>
+      <div class="filter-section-header" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="filter-section-icon">↻</div>
+          Overdue
+        </div>
+        <label class="toggle" style="margin:0;">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <div style="padding:16px;border-bottom:1px solid var(--border);">
+        <button class="btn btn-accent btn-full" style="height:40px;">Generate list →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ICONS -->
+  <div class="kit-section">
+    <div class="kit-section-title">Icons (1.5px stroke, square caps)</div>
+    <div class="table-wrap" style="max-width:800px;">
+      <div class="icon-grid">
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+          <div class="icon-name">Search</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="icon-name">User</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div class="icon-name">Email</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="0"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="icon-name">Calendar</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="icon-name">Activity</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
+          <div class="icon-name">Signal</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+          <div class="icon-name">Download</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="icon-name">Done</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="icon-name">Info</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="icon-name">Warning</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.1L1 10"/></svg></div>
+          <div class="icon-name">Refresh</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+          <div class="icon-name">Close</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+          <div class="icon-name">Menu</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="icon-name">Shield</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+          <div class="icon-name">Package</div>
+        </div>
+        <div class="icon-item">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <div class="icon-name">Automate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#EFE6D6"/>
+    <rect x="16" y="20" width="80" height="28" fill="#241C14"/>
+    <rect x="104" y="20" width="80" height="28" fill="transparent" stroke="#241C14" stroke-width="1"/>
+    <rect x="16" y="56" width="168" height="1" fill="rgba(36,28,20,.15)"/>
+    <rect x="16" y="66" width="168" height="24" fill="white" stroke="rgba(36,28,20,.1)" stroke-width="0.5"/>
+    <rect x="16" y="98" width="168" height="24" fill="white" stroke="rgba(36,28,20,.1)" stroke-width="0.5"/>
+  </svg>
+</template>
+</body>
+</html>

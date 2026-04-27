@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zizai — Automation Atelier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Spectral:ital,wght@0,200;0,300;0,400;1,200;1,300&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel">
+// ── Tweaks Panel (inlined) ──────────────────────────────────────────────────
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;overflow-x:hidden;min-height:0}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5)}
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);transition:left .15s,width .15s}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2}
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+`;
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' ? keyOrEdits : { [keyOrEdits]: val };
+    setValues(prev => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      if (e?.data?.type === '__activate_edit_mode') setOpen(true);
+      else if (e?.data?.type === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => { setOpen(false); window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*'); };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current; if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right, startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = { x: Math.max(8, startRight-(ev.clientX-sx)), y: Math.max(8, startBottom-(ev.clientY-sy)) };
+      panel.style.right = offsetRef.current.x+'px'; panel.style.bottom = offsetRef.current.y+'px';
+    };
+    const up = () => { window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up); };
+    window.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" style={{right:offsetRef.current.x, bottom:offsetRef.current.y}}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" onMouseDown={e=>e.stopPropagation()} onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function TweakSection({ title }) { return <div className="twk-sect">{title}</div>; }
+
+function TweakSlider({ label, value, min=0, max=100, step=1, unit='', onChange }) {
+  return (
+    <div className="twk-row">
+      <div className="twk-lbl"><span>{label}</span><span className="twk-val">{value}{unit}</span></div>
+      <input type="range" className="twk-slider" min={min} max={max} step={step} value={value} onChange={e=>onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value?'1':'0'} onClick={()=>onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const opts = options.map(o => typeof o==='object' ? o : {value:o,label:o});
+  const idx = Math.max(0, opts.findIndex(o=>o.value===value));
+  const n = opts.length;
+  return (
+    <div className="twk-row">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <div className="twk-seg">
+        <div className="twk-seg-thumb" style={{left:`calc(2px + ${idx}*(100% - 4px)/${n})`,width:`calc((100% - 4px)/${n})`}} />
+        {opts.map(o=>(
+          <button key={o.value} type="button" onClick={()=>onChange(o.value)}>{o.label}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── App ─────────────────────────────────────────────────────────────────────
+const { useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "layout": "zen",
+  "heroSize": 88,
+  "showEnso": true,
+  "lang": "en"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  useEffect(() => {
+    const nav = document.getElementById('main-nav');
+    const handler = () => nav.classList.toggle('scrolled', window.scrollY > 60);
+    window.addEventListener('scroll', handler);
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  useEffect(() => {
+    const el = document.querySelector('.hero-title');
+    if (el) el.style.fontSize = t.heroSize + 'px';
+  }, [t.heroSize]);
+
+  useEffect(() => {
+    const el = document.querySelector('.enso');
+    if (el) el.style.display = t.showEnso ? 'block' : 'none';
+  }, [t.showEnso]);
+
+  useEffect(() => {
+    const body = document.body;
+    body.style.setProperty('--parchment', t.layout === 'structured' ? '#F5F2EC' : '#EFE6D6');
+  }, [t.layout]);
+
+  useEffect(() => {
+    const heroBody = document.querySelector('.hero-body');
+    const ctaPrimary = document.querySelector('.hero-cta .btn-primary');
+    const ctaGhost = document.querySelector('.hero-cta .btn-ghost');
+    if (t.lang === 'en') {
+      if (heroBody) heroBody.textContent = "We build systems that do the work you don't need to do. Repetitive tasks — clicking, copying, entering — gone.";
+      if (ctaPrimary) ctaPrimary.textContent = 'Schedule a call';
+      if (ctaGhost) ctaGhost.textContent = 'What we do';
+    } else {
+      if (heroBody) heroBody.textContent = 'Wij bouwen systemen die het werk doen dat jij niet hoeft te doen. Repetitief, klikken, kopiëren, invoeren, checken — dat verdwijnt.';
+      if (ctaPrimary) ctaPrimary.textContent = 'Gesprek inplannen';
+      if (ctaGhost) ctaGhost.textContent = 'Wat we doen';
+    }
+  }, [t.lang]);
+
+  return (
+    <TweaksPanel title="Tweaks">
+      <TweakSection title="Layout" />
+      <TweakRadio label="Variant" value={t.layout} options={[{value:'zen',label:'Zen'},{value:'structured',label:'Strak'}]} onChange={v=>setTweak('layout',v)} />
+      <TweakSection title="Typografie" />
+      <TweakSlider label="Hero grootte" value={t.heroSize} min={48} max={120} step={4} unit="px" onChange={v=>setTweak('heroSize',v)} />
+      <TweakSection title="Elementen" />
+      <TweakToggle label="Enso cirkel" value={t.showEnso} onChange={v=>setTweak('showEnso',v)} />
+      <TweakSection title="Taal" />
+      <TweakRadio label="Taal" value={t.lang} options={[{value:'nl',label:'NL'},{value:'en',label:'EN'}]} onChange={v=>setTweak('lang',v)} />
+    </TweaksPanel>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<App />);
+</script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #EFE6D6;
+    --sand: #E2D4BD;
+    --char: #241C14;
+    --terracotta: #B9532C;
+    --bronze: #7C6A4E;
+    --char-60: rgba(36,28,20,0.6);
+    --char-30: rgba(36,28,20,0.3);
+    --char-10: rgba(36,28,20,0.1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--parchment);
+    color: var(--char);
+    font-family: 'Spectral', serif;
+    font-weight: 300;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 28px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+    transition: background 0.3s;
+  }
+  nav.scrolled {
+    background: rgba(239,230,214,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--char-10);
+  }
+  .logo-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--char);
+    text-decoration: none;
+  }
+  .logo-mark em {
+    font-style: italic;
+    color: var(--terracotta);
+  }
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 36px;
+    align-items: center;
+  }
+  nav ul a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bronze);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  nav ul a:hover { color: var(--char); }
+  .nav-cta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--terracotta) !important;
+    border-bottom: 1px solid var(--terracotta);
+    padding-bottom: 1px;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bronze);
+    margin-bottom: 40px;
+  }
+  .hero-tagline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bronze);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 40px;
+    white-space: nowrap;
+  }
+  .hero-dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: var(--terracotta);
+    border-radius: 50%;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 88px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--char);
+    margin-bottom: 12px;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--terracotta);
+  }
+  .hero-body {
+    font-family: 'Spectral', serif;
+    font-weight: 300;
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--bronze);
+    max-width: 480px;
+    margin-bottom: 56px;
+  }
+  .hero-cta {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  .btn-primary {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--parchment);
+    background: var(--char);
+    border: none;
+    padding: 14px 32px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover {
+    background: var(--terracotta);
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bronze);
+    text-decoration: none;
+    border-bottom: 1px solid var(--char-30);
+    padding-bottom: 2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-ghost:hover { color: var(--char); border-color: var(--char); }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 48px;
+    left: 48px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--char-30);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-scroll::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: var(--char-30);
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--char-10);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* SECTION WRAPPER */
+  section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 100px 48px;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: var(--terracotta);
+    opacity: 0.4;
+  }
+
+  /* SERVICES */
+  .services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .service-item {
+    padding: 40px 0;
+    border-top: 1px solid var(--char-10);
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 24px;
+    align-items: start;
+    transition: background 0.15s;
+    cursor: default;
+  }
+  .service-item:nth-child(odd) { padding-right: 60px; border-right: 1px solid var(--char-10); }
+  .service-item:nth-child(even) { padding-left: 60px; }
+  .service-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--terracotta);
+    padding-top: 6px;
+  }
+  .service-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--char);
+    margin-bottom: 10px;
+  }
+  .service-desc {
+    font-family: 'Spectral', serif;
+    font-weight: 300;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--bronze);
+  }
+
+  /* APHORISM */
+  .aphorism-section {
+    background: var(--char);
+    max-width: 100%;
+    padding: 100px 48px;
+  }
+  .aphorism-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 80px;
+  }
+  .enso {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    opacity: 0.85;
+  }
+  .aphorism-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--parchment);
+  }
+  .aphorism-text em {
+    font-style: normal;
+    color: var(--terracotta);
+  }
+
+  /* HOW */
+  .how-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 48px;
+    margin-top: 8px;
+  }
+  .how-item {}
+  .how-step {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--char-30);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .how-step::after { content: ''; width: 24px; height: 1px; background: var(--char-30); }
+  .how-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--char);
+    margin-bottom: 12px;
+  }
+  .how-desc {
+    font-family: 'Spectral', serif;
+    font-weight: 300;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--bronze);
+  }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 80px;
+    align-items: start;
+  }
+  .about-title-block {}
+  .about-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: clamp(36px, 4vw, 56px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--char);
+    margin-bottom: 24px;
+  }
+  .about-title em {
+    font-style: italic;
+    color: var(--terracotta);
+  }
+  .about-body p {
+    font-family: 'Spectral', serif;
+    font-weight: 300;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--char);
+    margin-bottom: 24px;
+  }
+  .about-body p:last-child { margin-bottom: 0; }
+  .about-names {
+    margin-top: 40px;
+    display: flex;
+    gap: 48px;
+  }
+  .about-person {}
+  .about-person-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--char);
+  }
+  .about-person-role {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bronze);
+    margin-top: 4px;
+  }
+
+  /* CTA */
+  .cta-section {
+    background: var(--sand);
+    max-width: 100%;
+    padding: 100px 48px;
+    border-top: 1px solid var(--char-10);
+  }
+  .cta-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 60px;
+  }
+  .cta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: clamp(36px, 4vw, 60px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--char);
+    max-width: 540px;
+  }
+  .cta-title em {
+    font-style: italic;
+    color: var(--terracotta);
+  }
+  .cta-right {
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .cta-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--bronze);
+    margin-bottom: 24px;
+    line-height: 1.8;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 40px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--char-10);
+  }
+  .footer-copy {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--char-30);
+  }
+  .footer-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--bronze);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <a href="#" class="logo-mark">zizai<em>.</em></a>
+  <ul>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#how">Werkwijze</a></li>
+    <li><a href="#about">Over ons</a></li>
+    <li><a href="#contact" class="nav-cta">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div id="hero-enso" style="margin-bottom:32px;"></div>
+<script>
+(function(){
+  var M='M 78 28 C 92 42, 92 64, 76 78 C 60 92, 36 92, 22 78 C 8 64, 8 42, 22 28 C 32 18, 48 14, 62 18';
+  var H='M 76 30 C 88 44, 88 62, 74 76';
+  document.getElementById('hero-enso').innerHTML='<svg width="100" height="100" viewBox="0 0 100 100" fill="none"><path d="'+M+'" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"/><path d="'+H+'" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/></svg>';
+})();
+</script>
+  <h1 class="hero-title" style="font-size:88px;">zizai</h1>
+  <div class="hero-tagline">Work less <span class="hero-dot"></span> Do more</div>
+  <p class="hero-body">
+    We build systems that do the work you don't need to do. Repetitive, clicking, copying, entering — gone.
+  </p>
+  <div class="hero-cta">
+    <a href="#contact" class="btn-primary">Gesprek inplannen</a>
+    <a href="#services" class="btn-ghost">Wat we doen</a>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-label">01 — Wat we bouwen</div>
+  <div class="services-grid">
+    <div class="service-item">
+      <div class="service-num">01</div>
+      <div>
+        <div class="service-title">Email­automatisering</div>
+        <div class="service-desc">Emails uitlezen, data extraheren en automatisch verwerken in systemen als AFAS. Geen handmatig invoeren meer.</div>
+      </div>
+    </div>
+    <div class="service-item">
+      <div class="service-num">02</div>
+      <div>
+        <div class="service-title">Workflow­automatisering</div>
+        <div class="service-desc">Processen die nu handmatig lopen automatiseren. Triggers, stappen, uitzonderingen — allemaal afgevangen.</div>
+      </div>
+    </div>
+    <div class="service-item">
+      <div class="service-num">03</div>
+      <div>
+        <div class="service-title">AI Agents</div>
+        <div class="service-desc">Systemen die meerdere stappen zelfstandig uitvoeren en beslissingen nemen. Zonder dat jij erbij hoeft te zijn.</div>
+      </div>
+    </div>
+    <div class="service-item">
+      <div class="service-num">04</div>
+      <div>
+        <div class="service-title">LLM Integraties</div>
+        <div class="service-desc">Tekst verwerken, begrijpen en genereren binnen bestaande werkprocessen. Taal als infrastructuur.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APHORISM -->
+<div class="aphorism-section">
+  <div class="aphorism-inner">
+    <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="enso">
+  <defs>
+    <filter id="brush-lp" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="4" seed="42" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <path d="M 70.57,25.49 L 71.76,26.42 L 72.92,27.41 L 74.02,28.46 L 75.09,29.56 L 76.10,30.72 L 77.06,31.92 L 77.96,33.17 L 78.81,34.47 L 79.59,35.81 L 80.32,37.18 L 80.98,38.60 L 81.58,40.04 L 82.11,41.52 L 82.56,43.03 L 82.95,44.56 L 83.27,46.11 L 83.51,47.68 L 83.68,49.27 L 83.77,50.86 L 83.79,52.46 L 83.73,54.07 L 83.59,55.67 L 83.37,57.27 L 83.08,58.86 L 82.71,60.44 L 82.26,62.01 L 81.74,63.55 L 81.14,65.07 L 80.46,66.57 L 79.71,68.03 L 78.89,69.45 L 78.00,70.84 L 77.03,72.19 L 76.01,73.48 L 74.91,74.73 L 73.76,75.93 L 72.54,77.07 L 71.27,78.15 L 69.95,79.16 L 68.57,80.11 L 67.15,81.00 L 65.69,81.81 L 64.18,82.55 L 62.64,83.21 L 61.06,83.80 L 59.46,84.31 L 57.83,84.74 L 56.19,85.09 L 54.52,85.35 L 52.85,85.54 L 51.17,85.64 L 49.48,85.65 L 47.80,85.59 L 46.12,85.44 L 44.45,85.21 L 42.80,84.89 L 41.16,84.50 L 39.54,84.02 L 37.96,83.47 L 36.40,82.84 L 34.87,82.13 L 33.39,81.35 L 31.94,80.50 L 30.54,79.58 L 29.19,78.60 L 27.89,77.55 L 26.64,76.44 L 25.45,75.27 L 24.32,74.05 L 23.25,72.78 L 22.24,71.46 L 21.30,70.09 L 20.43,68.69 L 19.62,67.24 L 18.89,65.77 L 18.23,64.26 L 17.64,62.72 L 17.13,61.16 L 16.70,59.58 L 16.34,57.98 L 16.06,56.37 L 15.85,54.75 L 15.72,53.12 L 15.67,51.50 L 15.70,49.88 L 15.81,48.26 L 15.99,46.65 L 16.24,45.06 L 16.57,43.48 L 16.98,41.92 L 17.46,40.39 L 18.00,38.88 L 18.62,37.40 L 19.31,35.96 L 20.06,34.55 L 20.88,33.19 L 21.76,31.86 L 22.69,30.58 L 23.69,29.35 L 24.74,28.17 L 25.85,27.05 L 27.00,25.98 L 28.21,24.96 L 29.45,24.01 L 30.74,23.12 L 32.07,22.30 L 33.43,21.54 L 34.82,20.85 L 36.25,20.22 L 37.69,19.67 L 39.16,19.19 L 40.65,18.77 L 42.15,18.44 L 43.67,18.17 L 45.19,17.98 L 46.72,17.86 L 48.24,17.82 L 49.77,17.85 L 51.28,17.95 L 52.79,18.12 L 52.79,18.12 L 51.28,18.10 L 49.77,18.16 L 48.27,18.28 L 46.78,18.47 L 45.30,18.73 L 43.85,19.06 L 42.41,19.45 L 40.99,19.91 L 39.60,20.44 L 38.25,21.03 L 36.92,21.68 L 35.62,22.39 L 34.37,23.15 L 33.15,23.98 L 31.98,24.85 L 30.85,25.78 L 29.77,26.76 L 28.74,27.79 L 27.76,28.86 L 26.83,29.98 L 25.96,31.14 L 25.15,32.33 L 24.39,33.56 L 23.70,34.81 L 23.06,36.10 L 22.49,37.42 L 21.99,38.75 L 21.54,40.11 L 21.17,41.48 L 20.86,42.87 L 20.61,44.27 L 20.43,45.67 L 20.32,47.08 L 20.28,48.49 L 20.30,49.89 L 20.39,51.29 L 20.54,52.69 L 20.76,54.07 L 21.04,55.43 L 21.39,56.78 L 21.80,58.11 L 22.26,59.42 L 22.79,60.69 L 23.38,61.95 L 24.02,63.17 L 24.72,64.35 L 25.47,65.50 L 26.27,66.62 L 27.12,67.69 L 28.03,68.71 L 28.97,69.70 L 29.96,70.63 L 30.99,71.52 L 32.05,72.36 L 33.15,73.15 L 34.29,73.89 L 35.45,74.57 L 36.65,75.20 L 37.87,75.77 L 39.11,76.29 L 40.37,76.75 L 41.65,77.16 L 42.95,77.50 L 44.26,77.79 L 45.58,78.01 L 46.91,78.18 L 48.25,78.29 L 49.59,78.34 L 50.93,78.33 L 52.27,78.26 L 53.60,78.13 L 54.93,77.94 L 56.25,77.69 L 57.55,77.39 L 58.85,77.03 L 60.12,76.60 L 61.38,76.13 L 62.62,75.59 L 63.84,75.00 L 65.02,74.36 L 66.19,73.66 L 67.32,72.91 L 68.42,72.11 L 69.48,71.26 L 70.51,70.36 L 71.49,69.41 L 72.44,68.41 L 73.34,67.38 L 74.20,66.29 L 75.00,65.17 L 75.76,64.01 L 76.47,62.81 L 77.12,61.58 L 77.72,60.32 L 78.26,59.02 L 78.74,57.70 L 79.16,56.35 L 79.52,54.98 L 79.81,53.59 L 80.04,52.19 L 80.21,50.77 L 80.30,49.34 L 80.34,47.90 L 80.30,46.46 L 80.19,45.02 L 80.02,43.57 L 79.77,42.14 L 79.46,40.71 L 79.08,39.30 L 78.63,37.90 L 78.11,36.52 L 77.53,35.16 L 76.88,33.83 L 76.16,32.52 L 75.38,31.25 L 74.53,30.01 L 73.63,28.82 L 72.67,27.66 L 71.65,26.55 L 70.57,25.49 Z" fill="#B9532C" filter="url(#brush-lp)"/>
+</svg>
+    <div class="aphorism-text">
+      "The reconciliation finished <em>overnight.</em><br>Take the morning."
+    </div>
+  </div>
+</div>
+
+<!-- HOW -->
+<section id="how">
+  <div class="section-label">02 — Hoe het werkt</div>
+  <div class="how-grid">
+    <div class="how-item">
+      <div class="how-step">Stap 01</div>
+      <div class="how-title">Discovery call</div>
+      <div class="how-desc">We brengen samen in kaart welk handmatig werk de meeste tijd kost. Geen intake-formulier. Gewoon een gesprek.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-step">Stap 02</div>
+      <div class="how-title">Bouwen</div>
+      <div class="how-desc">We ontwerpen en bouwen een automatisering op maat. Snel, zonder overhead. Eerste resultaten zijn er binnen dagen.</div>
+    </div>
+    <div class="how-item">
+      <div class="how-step">Stap 03</div>
+      <div class="how-title">Stille werking</div>
+      <div class="how-desc">Het systeem draait. Jij merkt er niets van — behalve dat het werk gedaan is. Quietly running. Nothing to look at.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label">03 — Over ons</div>
+  <div class="about-grid">
+    <div class="about-title-block">
+      <div class="about-title">Gebouwd door twee mensen die het <em>zat waren</em> van klikken.</div>
+    </div>
+    <div class="about-body">
+      <p>Zizai (自在) is Boeddhistisch voor vrij, op je gemak, zonder obstructie. We kozen die naam bewust. Onze missie is eenvoudig: werk dat mensen doen maar eigenlijk niet hoeven te doen, overdragen aan systemen.</p>
+      <p>We zijn geen groot bureau en willen dat ook niet worden. We werken met een klein aantal klanten tegelijk, denken mee op strategisch niveau, en leveren iets dat echt werkt.</p>
+      <div class="about-names">
+        <div class="about-person">
+          <div class="about-person-name">Mark</div>
+          <div class="about-person-role">Co-founder</div>
+        </div>
+        <div class="about-person">
+          <div class="about-person-name">Sheryla</div>
+          <div class="about-person-role">Co-founder</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section" id="contact">
+  <div class="cta-inner">
+    <div class="cta-title">Hoeveel uur verlies jij aan werk dat <em>niet jouw werk</em> is?</div>
+    <div class="cta-right">
+      <div class="cta-meta">
+        <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e68e878a8a89a69c8f9c878fc8888a">[email&#160;protected]</a><br>
+        Amsterdam
+      </div>
+      <a href="/cdn-cgi/l/email-protection#157d7479797a556f7c6f747c3b7b79" class="btn-primary">Neem contact op</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-copy">© 2025 Zizai — Automation Atelier</div>
+  <div class="footer-tagline">zizai. — work less. do more.</div>
+</footer>
+
+
+
+<div id="tweaks-root"></div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#EFE6D6"/>
+    <text x="40" y="75" font-family="serif" font-size="36" fill="#241C14" letter-spacing="-1">zizai<tspan fill="#B9532C" font-style="italic">.</tspan></text>
+  </svg>
+</template>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+</html>
