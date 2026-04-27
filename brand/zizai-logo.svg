@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" fill="none" role="img" aria-label="Zizai logo lockup">
+  <title>Zizai — primary lockup</title>
+  <defs>
+    
+  </defs>
+
+  
+  <g transform="translate(40, 80) scale(2.0)">
+    <path d="M 78 28&#xA;             C 92 42, 92 64, 76 78&#xA;             C 60 92, 36 92, 22 78&#xA;             C 8 64, 8 42, 22 28&#xA;             C 32 18, 48 14, 62 18" stroke="#B9532C" stroke-width="6" stroke-linecap="round" fill="none"></path>
+    <path d="M 76 30&#xA;             C 88 44, 88 62, 74 76" stroke="#B9532C" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"></path>
+  </g>
+
+  
+  <text x="290" y="220" class="wm">zizai</text>
+
+  
+  <text x="292" y="262" class="tag">work less  ·  do more</text>
+</svg>
