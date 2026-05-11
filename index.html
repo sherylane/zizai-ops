@@ -1583,7 +1583,17 @@ async function saveToNotion() {
         'Tijdlijn': { rich_text: [{ text: { content: getRadio('timeline') } }] },
         'Status':   { select: { name: 'Nieuw' } }
       },
-      children: buildNotionBlocks(lastBrief)
+      children: [
+        ...buildNotionBlocks(lastBrief),
+        ...(lastPlan ? [
+          { object:'block', type:'heading_1', heading_1:{ rich_text:[{ text:{ content:'PROJECTPLAN' } }] } },
+          ...buildNotionBlocks(lastPlan)
+        ] : []),
+        ...(rawTexts['adv-box-raw'] ? [
+          { object:'block', type:'heading_1', heading_1:{ rich_text:[{ text:{ content:'ADVOCAAT VAN DE DUIVEL' } }] } },
+          ...buildNotionBlocks(rawTexts['adv-box-raw'])
+        ] : [])
+      ].slice(0, 100)
     }
   };
   try {
