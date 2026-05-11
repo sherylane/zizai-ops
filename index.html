@@ -344,22 +344,52 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cur
 /* ─── OUTPUT BOX (markdown rendered) ─── */
 .output-box {
   background: #1C2E29; border: 1px solid #3D5E56; border-top: none;
-  padding: 28px 32px; font-family: 'Syne', sans-serif; font-size: 15px;
+  padding: 32px 36px; font-family: 'DM Mono', monospace; font-size: 12.5px;
   line-height: 1.85; color: var(--text); min-height: 260px;
 }
-.output-box h1, .output-box h2 {
-  font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent);
-  letter-spacing: 1px; text-transform: uppercase; font-size: 13px;
-  margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+.output-box h2 {
+  font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent);
+  letter-spacing: 2px; text-transform: uppercase; font-size: 10px;
+  margin: 32px 0 10px; padding: 6px 10px;
+  background: rgba(196,113,74,0.08);
+  border-left: 2px solid var(--accent);
 }
 .output-box h2:first-child { margin-top: 0; }
-.output-box h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--text); margin: 16px 0 6px; }
-.output-box p { margin-bottom: 10px; }
-.output-box ul, .output-box ol { margin: 8px 0 12px 20px; }
-.output-box li { margin-bottom: 8px; }
-.output-box strong { color: var(--text); font-weight: 400; }
+.output-box h3 {
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+  color: var(--text); margin: 20px 0 6px;
+  border-bottom: 1px solid rgba(61,94,86,0.5); padding-bottom: 4px;
+}
+.output-box p { margin-bottom: 10px; color: var(--text); line-height: 1.85; }
+.output-box ul {
+  margin: 8px 0 14px 0; padding: 0; list-style: none;
+}
+.output-box ul li {
+  position: relative; padding-left: 18px; margin-bottom: 5px;
+  color: var(--text); line-height: 1.7;
+}
+.output-box ul li::before {
+  content: '—'; position: absolute; left: 0;
+  color: var(--accent); font-weight: 700;
+}
+.output-box ol {
+  margin: 8px 0 14px 20px;
+}
+.output-box ol li { margin-bottom: 5px; color: var(--text); }
+.output-box strong { color: var(--muted2); font-weight: 700; }
+.output-box em { color: var(--blue); font-style: italic; }
+.output-box code {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  background: rgba(61,94,86,0.3); padding: 1px 5px;
+  border: 1px solid rgba(61,94,86,0.5); color: var(--blue);
+}
+.output-box .spacer { height: 6px; }
 .output-box-red { border-color: rgba(212,96,74,0.28); background: #1a1410; }
-.output-box-red h2 { color: var(--red); border-bottom-color: rgba(212,96,74,0.2); }
+.output-box-red h2 {
+  color: var(--red); border-left-color: var(--red);
+  background: rgba(212,96,74,0.08);
+}
+.output-box-red ul li::before { color: var(--red); }
 .output-box-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 
 /* Prompts panel */
@@ -887,6 +917,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cur
       </div>
       <div class="output-actions">
         <button class="btn-sm" onclick="saveProject()">OPSLAAN</button>
+        <button class="btn-sm" onclick="downloadOutput()" id="btn-download" style="display:none">↓ DOWNLOAD</button>
         <button class="btn-notion" id="btn-notion-save" onclick="saveToNotion()" style="display:none">↗ Notion</button>
         <button class="btn-sm" onclick="resetAll()">NIEUW</button>
       </div>
@@ -926,18 +957,6 @@ const NOTION_CONFIG = {
   database_id: 'f114dcd3eddd43dfb84a91a5e295a266',
   proxy: 'https://royal-pine-63d6.zizailabs.workers.dev/'
 };
-
-// ─── CLAUDE VIA WORKER ───
-async function callClaude(prompt) {
-  const res = await fetch(NOTION_CONFIG.proxy, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'generate', prompt })
-  });
-  const d = await res.json();
-  if (res.ok && d.ok) return d.text;
-  throw new Error(d.message || 'Worker fout');
-}
 
 // ─── AUTH ───
 function checkPw() {
@@ -1068,29 +1087,62 @@ document.querySelectorAll('input[type="text"], input[type="email"], input[type="
 // ─── MARKDOWN RENDERER ───
 function renderMarkdown(text) {
   if (!text) return '';
+  let html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // Split into lines for processing
+  const lines = html.split('\n');
+  const out = [];
+  let inList = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Close list if needed
+    if (inList && !/^[-•*]\s/.test(line) && !/^\d+\.\s/.test(line.trimStart())) {
+      out.push('</ul>');
+      inList = false;
+    }
+
+    // Numbered section headings: "1. EXECUTIVE SUMMARY" or "## HEADING"
+    if (/^#{1,3}\s/.test(line)) {
+      const level = line.match(/^(#{1,3})/)[1].length;
+      const content = line.replace(/^#{1,3}\s+/, '');
+      out.push(`<h${level === 1 ? 2 : level === 2 ? 2 : 3}>${applyInline(content)}</h${level === 1 ? 2 : level === 2 ? 2 : 3}>`);
+    } else if (/^\d+\.\s+[A-ZÁÉÍÓÚ]/.test(line)) {
+      // Numbered section heading
+      out.push(`<h2>${applyInline(line)}</h2>`);
+    } else if (/^[-•*]\s/.test(line)) {
+      // Bullet list
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${applyInline(line.replace(/^[-•*]\s+/, ''))}</li>`);
+    } else if (line.trim() === '') {
+      out.push('<div class="spacer"></div>');
+    } else {
+      // Regular paragraph line — group consecutive lines into <p>
+      let para = applyInline(line);
+      // Look ahead: continue para if next line is also regular text
+      while (i + 1 < lines.length && lines[i+1].trim() !== '' && !/^[#\-•*\d]/.test(lines[i+1])) {
+        i++;
+        para += ' ' + applyInline(lines[i]);
+      }
+      out.push(`<p>${para}</p>`);
+    }
+  }
+  if (inList) out.push('</ul>');
+  return out.join('\n');
+}
+
+function applyInline(text) {
   return text
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    // Headings: nummers + caps (1. EXECUTIVE SUMMARY)
-    .replace(/^(\d+)\.\s+([A-Z][A-Z\s\/&'-]{2,})\s*$/gm, '<h2>$1. $2</h2>')
-    // Bold + caps heading zonder nummer (ZIZAI INTERN)
-    .replace(/^\*\*([A-Z][A-Z\s\/&'-]{2,})\*\*\s*$/gm, '<h2>$1</h2>')
-    // Gewone heading (## of ###)
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+    // Bold+italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     // Bold
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Bullet lists
-    .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-    // Fix dubbele ul's
-    .replace(/<\/ul>\s*<ul>/g, '')
-    // Lege regels = paragraaf
-    .replace(/\n\n+/g, '\n</p><p>\n')
-    // Overige newlines
-    .replace(/\n/g, '<br>')
-    // Wrap in p
-    .replace(/^(?!<[hul])(.+)$/gm, (m) => m.startsWith('<') ? m : `<p>${m}</p>`);
+    // Italic
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Inline code
+    .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
 function setBoxContent(boxId, text) {
@@ -1175,7 +1227,8 @@ Geef uitsluitend een JSON response (geen andere tekst):
 {"categorie": "Naam (max 5 woorden)", "redenering": "2-3 zinnen waarom."}`;
   try {
     let text = '';
-    text = await callClaude(prompt);
+    if (window.claude) text = await window.claude.complete(prompt);
+    else throw new Error('Claude niet beschikbaar');
     const json = JSON.parse(text.trim().replace(/```json|```/g, ''));
     document.getElementById('ai-category').textContent = json.categorie || '';
     document.getElementById('ai-why').textContent = json.redenering || '';
@@ -1392,8 +1445,14 @@ async function generateOutput(mode) {
   else title = 'Sketch — Analyse';
   document.getElementById('output-title').textContent = title;
   document.getElementById('output-subtitle').textContent = new Date().toLocaleDateString(lang === 'nl' ? 'nl-NL' : 'en-GB');
+  if (!window.claude) {
+    genLabel.style.display = 'none';
+    box.innerHTML = renderMarkdown('— Claude niet beschikbaar in deze omgeving.\n\nKopieer de prompt via de **Kopieer prompt** knop en plak in claude.ai.');
+    rawTexts['brief-box-raw'] = '';
+    return;
+  }
   try {
-    const result = await callClaude(prompt);
+    const result = await window.claude.complete(prompt);
     genLabel.style.display = 'none';
     lastBrief = result;
     setBoxContent('brief-box', result);
@@ -1410,8 +1469,9 @@ async function runAdvocat() {
   const box = document.getElementById('adv-box');
   const genLabel = document.getElementById('adv-gen-label');
   box.innerHTML = ''; genLabel.style.display = 'block';
+  if (!window.claude) { genLabel.style.display = 'none'; box.innerHTML = renderMarkdown('— Claude niet beschikbaar.'); return; }
   try {
-    const result = await callClaude(buildAdvocaatPrompt(lastBrief));
+    const result = await window.claude.complete(buildAdvocaatPrompt(lastBrief));
     genLabel.style.display = 'none';
     rawTexts['adv-box-raw'] = result;
     setBoxContent('adv-box', result);
@@ -1423,8 +1483,9 @@ async function runPlan() {
   const box = document.getElementById('plan-box');
   const genLabel = document.getElementById('plan-gen-label');
   box.innerHTML = ''; genLabel.style.display = 'block';
+  if (!window.claude) { genLabel.style.display = 'none'; box.innerHTML = renderMarkdown('— Claude niet beschikbaar.'); return; }
   try {
-    const result = await callClaude(buildPlanPrompt(lastBrief));
+    const result = await window.claude.complete(buildPlanPrompt(lastBrief));
     genLabel.style.display = 'none';
     lastPlan = result;
     rawTexts['plan-box-raw'] = result;
@@ -1501,6 +1562,8 @@ function loadProject(key) {
   rawTexts['brief-box-raw'] = lastBrief; rawTexts['plan-box-raw'] = lastPlan;
   currentOutputMode = item.mode;
   showScreen('output'); buildTabs(); updateNotionBtn();
+  const dlBtn = document.getElementById('btn-download');
+  if (dlBtn) dlBtn.style.display = 'inline-flex';
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-brief').classList.add('active');
   setBoxContent('brief-box', lastBrief);
@@ -1559,21 +1622,17 @@ function showNotionStatus(type, msg) {
 function updateNotionBtn() {
   const btn = document.getElementById('notion-settings-btn');
   const saveBtn = document.getElementById('btn-notion-save');
+  const dlBtn = document.getElementById('btn-download');
   if (btn) btn.classList.add('configured');
   if (saveBtn) saveBtn.style.display = 'inline-flex';
+  if (dlBtn) dlBtn.style.display = 'inline-flex';
 }
 async function saveToNotion() {
   if (!lastBrief) { toast('Genereer eerst een brief.'); return; }
 
   const btn = document.getElementById('btn-notion-save');
   const origHTML = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = '● Genereren...';
-
-  // Zorg dat plan en advocaat ook gegenereerd zijn
-  if (!rawTexts['plan-box-raw']) await runPlan();
-  if (!rawTexts['adv-box-raw']) await runAdvocat();
-
-  btn.innerHTML = '● Opslaan...';
+  btn.disabled = true; btn.innerHTML = '● Opslaan...';
   const company = val('c-company') || val('q-company') || currentOutputMode || 'Project';
   const dateStr = new Date().toISOString().split('T')[0];
   const payload = {
@@ -1589,17 +1648,7 @@ async function saveToNotion() {
         'Tijdlijn': { rich_text: [{ text: { content: getRadio('timeline') } }] },
         'Status':   { select: { name: 'Nieuw' } }
       },
-      children: [
-        ...buildNotionBlocks(lastBrief),
-        ...(lastPlan ? [
-          { object:'block', type:'heading_1', heading_1:{ rich_text:[{ text:{ content:'PROJECTPLAN' } }] } },
-          ...buildNotionBlocks(lastPlan)
-        ] : []),
-        ...(rawTexts['adv-box-raw'] ? [
-          { object:'block', type:'heading_1', heading_1:{ rich_text:[{ text:{ content:'ADVOCAAT VAN DE DUIVEL' } }] } },
-          ...buildNotionBlocks(rawTexts['adv-box-raw'])
-        ] : [])
-      ].slice(0, 100)
+      children: buildNotionBlocks(lastBrief)
     }
   };
   try {
@@ -1627,6 +1676,39 @@ function buildNotionBlocks(text) {
   return blocks.slice(0, 100);
 }
 
+// ─── DOWNLOAD ───
+function downloadOutput() {
+  if (!lastBrief) { toast(lang === 'nl' ? 'Genereer eerst een brief.' : 'Generate a brief first.'); return; }
+  const company = val('c-company') || val('q-company') || currentOutputMode || 'project';
+  const safeCompany = company.replace(/[^a-zA-Z0-9\-_]/g, '-').toLowerCase();
+  const date = new Date().toISOString().split('T')[0];
+  const filename = `zizai-brief-${safeCompany}-${date}.md`;
+
+  let content = `# ${document.getElementById('output-title').textContent}\n`;
+  content += `_Gegenereerd op ${new Date().toLocaleDateString(lang === 'nl' ? 'nl-NL' : 'en-GB')} door Zizai Intake Systeem v3_\n\n`;
+  content += '---\n\n';
+  content += lastBrief;
+
+  if (lastPlan) {
+    content += '\n\n---\n\n## PROJECTPLAN\n\n';
+    content += lastPlan;
+  }
+
+  if (rawTexts['adv-box-raw']) {
+    content += '\n\n---\n\n## ADVOCAAT VAN DE DUIVEL\n\n';
+    content += rawTexts['adv-box-raw'];
+  }
+
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(lang === 'nl' ? 'Gedownload als .md' : 'Downloaded as .md');
+}
+
 // ─── TOAST ───
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -1635,10 +1717,172 @@ function toast(msg) {
 }
 
 // ─── LANG ───
+const TRANSLATIONS = {
+  nl: {
+    // Header
+    'header-sub': 'Intake Systeem',
+    // Mode screen
+    't-mode-title': 'Wat breng je mee?',
+    't-mode-sub': 'Kies de modus die past bij dit project.',
+    't-tag-client': 'Externe opdracht',
+    't-desc-client': 'Echte klant, concreet probleem, uitgebreide intake.',
+    't-tag-quick': 'Snel invullen',
+    't-desc-quick': '3 velden, 2 minuten. Essentie vastleggen direct na een call.',
+    't-tag-inhouse': 'Eigen initiatief',
+    't-desc-inhouse': 'Jullie eigen project. Wat wil je bouwen voor Zizai?',
+    't-tag-sketch': 'Vaag idee',
+    't-desc-sketch': 'Nog geen structuur. Dump wat in je hoofd zit.',
+    't-btn-start': 'Starten →',
+    't-saved-title': 'Opgeslagen projecten',
+    // Client blocks
+    't-b1-title': 'Wie',
+    't-b2-title': 'Wat',
+    't-b3-title': 'AI Richting',
+    't-b4-title': 'Context',
+    't-b5-title': 'Zizai Intern',
+    't-company': 'Bedrijfsnaam',
+    't-contact': 'Contactpersoon',
+    't-email': 'E-mail',
+    't-website': 'Website',
+    't-call-date': 'Datum discovery call',
+    't-sector-label': 'Sector',
+    't-size-label': 'Bedrijfsgrootte',
+    't-enduser-label': 'Eindgebruiker van de oplossing',
+    't-enduser-hint': 'Wie gaat het écht gebruiken?',
+    't-problem-label': 'Kernprobleem — in hun eigen woorden',
+    't-problem-hint': 'Wat zeggen ze zelf dat het probleem is?',
+    't-hoe-label': 'Hoe gebeurt het nu?',
+    't-handmatig': 'Handmatig',
+    't-deels': 'Deels geautomatiseerd',
+    't-systeem': 'Systeem dat niet werkt',
+    't-trigger-label': 'Wat triggert het proces?',
+    't-form': 'Formulier',
+    't-tijdstip': 'Tijdstip',
+    't-mens': 'Menselijke actie',
+    't-mis-label': 'Wat gaat er mis of kost te veel tijd?',
+    't-mis-hw': 'Te veel handmatig werk',
+    't-mis-f': 'Fouten door menselijke invoer',
+    't-mis-i': 'Informatie raakt verloren',
+    't-mis-l': 'Duurt te lang',
+    't-mis-s': 'Meerdere systemen communiceren niet',
+    't-impact-label': 'Kwantificeer de impact',
+    't-impact-hint': 'Tijd, geld, fouten, FTE — zo concreet mogelijk',
+    't-ai-label': 'Claude analyseert op basis van je antwoorden',
+    't-ai-hint': 'Klik op Analyseer na het invullen van blok 2.',
+    't-tech-label': 'Bestaande tech stack',
+    't-tech-hint': 'CRM, ERP, interne systemen, Excel, etc.',
+    't-integ-label': 'Integraties / koppelingen nodig?',
+    't-budget-label': 'Budget indicatie',
+    't-timeline-label': 'Gewenste tijdlijn',
+    't-stake-label': 'Beslissers & stakeholders',
+    't-stake-hint': 'Wie beslist? Wie kan blokkeren?',
+    't-compliance-label': 'Compliance / security',
+    't-urgency-label': 'Aanleiding / urgentie',
+    't-urgency-hint': 'Waarom nu?',
+    't-complex-label': 'Complexiteit inschatting',
+    't-value-label': 'Strategische waarde',
+    't-lead-label': 'Projectlead',
+    't-vragen-label': 'Open vragen & twijfels',
+    't-notities-label': 'Extra notities',
+    // Draft
+    'draft-text': 'Draft opgeslagen',
+  },
+  en: {
+    'header-sub': 'Intake System',
+    't-mode-title': 'What are you bringing?',
+    't-mode-sub': 'Choose the mode that fits this project.',
+    't-tag-client': 'External project',
+    't-desc-client': 'Real client, concrete problem, full intake.',
+    't-tag-quick': 'Quick capture',
+    't-desc-quick': '3 fields, 2 minutes. Capture the essentials right after a call.',
+    't-tag-inhouse': 'Own initiative',
+    't-desc-inhouse': 'Your own project. What do you want to build for Zizai?',
+    't-tag-sketch': 'Vague idea',
+    't-desc-sketch': 'No structure yet. Dump what\'s in your head.',
+    't-btn-start': 'Start →',
+    't-saved-title': 'Saved projects',
+    't-b1-title': 'Who',
+    't-b2-title': 'What',
+    't-b3-title': 'AI Direction',
+    't-b4-title': 'Context',
+    't-b5-title': 'Zizai Internal',
+    't-company': 'Company name',
+    't-contact': 'Contact person',
+    't-email': 'Email',
+    't-website': 'Website',
+    't-call-date': 'Discovery call date',
+    't-sector-label': 'Sector',
+    't-size-label': 'Company size',
+    't-enduser-label': 'End user of the solution',
+    't-enduser-hint': 'Who will actually use it?',
+    't-problem-label': 'Core problem — in their own words',
+    't-problem-hint': 'What do they say the problem is?',
+    't-hoe-label': 'How does it work now?',
+    't-handmatig': 'Manual',
+    't-deels': 'Partially automated',
+    't-systeem': 'System that doesn\'t work',
+    't-trigger-label': 'What triggers the process?',
+    't-form': 'Form',
+    't-tijdstip': 'Scheduled time',
+    't-mens': 'Human action',
+    't-mis-label': 'What goes wrong or takes too long?',
+    't-mis-hw': 'Too much manual work',
+    't-mis-f': 'Errors from human input',
+    't-mis-i': 'Information gets lost',
+    't-mis-l': 'Takes too long',
+    't-mis-s': 'Multiple systems don\'t communicate',
+    't-impact-label': 'Quantify the impact',
+    't-impact-hint': 'Time, money, errors, FTE — as concrete as possible',
+    't-ai-label': 'Claude analyses based on your answers',
+    't-ai-hint': 'Click Analyse after filling in block 2.',
+    't-tech-label': 'Existing tech stack',
+    't-tech-hint': 'CRM, ERP, internal systems, Excel, etc.',
+    't-integ-label': 'Integrations / connections needed?',
+    't-budget-label': 'Budget indication',
+    't-timeline-label': 'Desired timeline',
+    't-stake-label': 'Decision makers & stakeholders',
+    't-stake-hint': 'Who decides? Who can block?',
+    't-compliance-label': 'Compliance / security',
+    't-urgency-label': 'Trigger / urgency',
+    't-urgency-hint': 'Why now?',
+    't-complex-label': 'Complexity estimate',
+    't-value-label': 'Strategic value',
+    't-lead-label': 'Project lead',
+    't-vragen-label': 'Open questions & doubts',
+    't-notities-label': 'Additional notes',
+    'draft-text': 'Draft saved',
+  }
+};
+
 function setLang(l) {
   lang = l;
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`.lang-btn[onclick="setLang('${l}')"]`).classList.add('active');
+  // Apply all translations
+  const T = TRANSLATIONS[l] || TRANSLATIONS.nl;
+  Object.entries(T).forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      // Preserve required star if present
+      const req = el.querySelector('.req');
+      el.textContent = text;
+      if (req) el.appendChild(req);
+    }
+  });
+  // Update html lang attr
+  document.documentElement.lang = l;
+  // Update prompts in current tab label
+  const tabs = document.getElementById('output-tabs');
+  if (tabs && tabs.children.length) buildTabs();
+  // Update date locale
+  document.getElementById('current-date').innerHTML =
+    new Date().toLocaleDateString(l === 'nl' ? 'nl-NL' : 'en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) +
+    '<br>v3.0 — ' + (l === 'nl' ? 'intern gebruik' : 'internal use');
+  // Rebuild AI placeholder text
+  const ph = document.getElementById('ai-placeholder');
+  if (ph && ph.style.display !== 'none') {
+    ph.textContent = l === 'nl' ? 'Vul blok 2 in en klik op Analyseer →' : 'Fill in block 2 and click Analyse →';
+  }
 }
 
 // ─── INIT ───
