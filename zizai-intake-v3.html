@@ -927,6 +927,18 @@ const NOTION_CONFIG = {
   proxy: 'https://royal-pine-63d6.zizailabs.workers.dev/'
 };
 
+// ─── CLAUDE VIA WORKER ───
+async function callClaude(prompt) {
+  const res = await fetch(NOTION_CONFIG.proxy, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'generate', prompt })
+  });
+  const d = await res.json();
+  if (res.ok && d.ok) return d.text;
+  throw new Error(d.message || 'Worker fout');
+}
+
 // ─── AUTH ───
 function checkPw() {
   const val = document.getElementById('pw-input').value;
@@ -1163,8 +1175,7 @@ Geef uitsluitend een JSON response (geen andere tekst):
 {"categorie": "Naam (max 5 woorden)", "redenering": "2-3 zinnen waarom."}`;
   try {
     let text = '';
-    if (window.claude) text = await window.claude.complete(prompt);
-    else throw new Error('Claude niet beschikbaar');
+    text = await callClaude(prompt);
     const json = JSON.parse(text.trim().replace(/```json|```/g, ''));
     document.getElementById('ai-category').textContent = json.categorie || '';
     document.getElementById('ai-why').textContent = json.redenering || '';
@@ -1381,14 +1392,8 @@ async function generateOutput(mode) {
   else title = 'Sketch — Analyse';
   document.getElementById('output-title').textContent = title;
   document.getElementById('output-subtitle').textContent = new Date().toLocaleDateString(lang === 'nl' ? 'nl-NL' : 'en-GB');
-  if (!window.claude) {
-    genLabel.style.display = 'none';
-    box.innerHTML = renderMarkdown('— Claude niet beschikbaar in deze omgeving.\n\nKopieer de prompt via de **Kopieer prompt** knop en plak in claude.ai.');
-    rawTexts['brief-box-raw'] = '';
-    return;
-  }
   try {
-    const result = await window.claude.complete({ messages: [{ role: 'user', content: prompt }] });
+    const result = await callClaude(prompt);
     genLabel.style.display = 'none';
     lastBrief = result;
     setBoxContent('brief-box', result);
@@ -1405,9 +1410,8 @@ async function runAdvocat() {
   const box = document.getElementById('adv-box');
   const genLabel = document.getElementById('adv-gen-label');
   box.innerHTML = ''; genLabel.style.display = 'block';
-  if (!window.claude) { genLabel.style.display = 'none'; box.innerHTML = renderMarkdown('— Claude niet beschikbaar.'); return; }
   try {
-    const result = await window.claude.complete(buildAdvocaatPrompt(lastBrief));
+    const result = await callClaude(buildAdvocaatPrompt(lastBrief));
     genLabel.style.display = 'none';
     rawTexts['adv-box-raw'] = result;
     setBoxContent('adv-box', result);
@@ -1419,9 +1423,8 @@ async function runPlan() {
   const box = document.getElementById('plan-box');
   const genLabel = document.getElementById('plan-gen-label');
   box.innerHTML = ''; genLabel.style.display = 'block';
-  if (!window.claude) { genLabel.style.display = 'none'; box.innerHTML = renderMarkdown('— Claude niet beschikbaar.'); return; }
   try {
-    const result = await window.claude.complete(buildPlanPrompt(lastBrief));
+    const result = await callClaude(buildPlanPrompt(lastBrief));
     genLabel.style.display = 'none';
     lastPlan = result;
     rawTexts['plan-box-raw'] = result;
