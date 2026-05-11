@@ -1567,7 +1567,13 @@ async function saveToNotion() {
 
   const btn = document.getElementById('btn-notion-save');
   const origHTML = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = '● Opslaan...';
+  btn.disabled = true; btn.innerHTML = '● Genereren...';
+
+  // Zorg dat plan en advocaat ook gegenereerd zijn
+  if (!rawTexts['plan-box-raw']) await runPlan();
+  if (!rawTexts['adv-box-raw']) await runAdvocat();
+
+  btn.innerHTML = '● Opslaan...';
   const company = val('c-company') || val('q-company') || currentOutputMode || 'Project';
   const dateStr = new Date().toISOString().split('T')[0];
   const payload = {
